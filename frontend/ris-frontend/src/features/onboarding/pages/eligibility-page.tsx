@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { CheckCircle2, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Loader2, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Building } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +15,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Form,
   FormControl,
@@ -25,7 +24,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-import { Link } from 'react-router-dom';
 import { formatUGX } from '@/lib/format-ugx';
 import { parseApiError } from '@/lib/parse-api-error';
 import {
@@ -37,13 +35,9 @@ import {
   type EligibilityResult,
 } from '../api/onboarding.api';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 function toBooleanFlag(value: 'yes' | 'no'): boolean {
   return value === 'yes';
 }
-
-// ── Component ────────────────────────────────────────────────────────────────
 
 export function EligibilityPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -84,10 +78,6 @@ export function EligibilityPage(): React.ReactElement {
 
   function handleContinue(): void {
     if (result?.sessionToken) {
-      // Persist the token in sessionStorage so a page reload on /register
-      // does not strand the user with a populated form but no session token
-      // (which used to surface as a vague "Validation failed" on submit).
-      // Cleared on successful registration in registration-page.tsx.
       sessionStorage.setItem('ris-eligibility-session-token', result.sessionToken);
       navigate('/register', {
         state: { sessionToken: result.sessionToken },
@@ -96,74 +86,75 @@ export function EligibilityPage(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-lg space-y-6">
-        {/* Branding */}
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
-            R
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-12 relative overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-primary/15 via-emerald-500/10 to-amber-500/10 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="w-full max-w-lg space-y-6 relative z-10">
+        {/* Header & Step progress */}
+        <div className="text-center space-y-3">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-emerald-700 text-primary-foreground shadow-md">
+            <Sparkles className="size-6 text-amber-300" />
           </div>
-          <h1 className="text-2xl font-bold font-display tracking-tight">
-            RIS Platform
+          <h1 className="text-2xl font-extrabold font-display tracking-tight sm:text-3xl">
+            Supplier Pre-Qualification
           </h1>
+          <p className="text-sm text-muted-foreground font-medium">
+            Find out in 2 minutes if your invoices qualify for immediate cash advance
+          </p>
+
+          {/* Stepper */}
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">1</span>
+              <span>Eligibility Assessment</span>
+            </div>
+            <div className="h-px w-6 bg-border" />
+            <div className="flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span className="flex size-5 items-center justify-center rounded-full bg-muted text-muted-foreground text-[10px]">2</span>
+              <span>Account Setup</span>
+            </div>
+          </div>
         </div>
 
-        {/* Step indicator */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">1</span>
-            <span className="font-medium text-foreground">Eligibility</span>
-          </div>
-          <div className="h-px w-8 bg-border" />
-          <div className="flex items-center gap-1.5">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-medium">2</span>
-            <span>Registration</span>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">
-              Check Your Eligibility
-            </CardTitle>
+        <Card className="glass-card shadow-xl border border-border/80">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-bold font-display">Business Criteria</CardTitle>
             <CardDescription>
-              Answer a few questions to see if your business qualifies for
-              invoice financing with RIS.
+              Answer the standard trade finance qualification questions below
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 {/* Q1: Registered company */}
                 <FormField
                   control={form.control}
                   name="registeredCompany"
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>
-                        Is your business a registered company in Uganda?
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Is your business registered in Uganda? (URSB / Tax PIN)
                       </FormLabel>
-                      <div className="flex gap-3">
+                      <div className="grid grid-cols-2 gap-3">
                         <Button
                           type="button"
                           id="reg-yes"
                           variant={field.value === 'yes' ? 'default' : 'outline'}
-                          size="sm"
+                          className={field.value === 'yes' ? 'shadow-sm font-semibold' : 'border-border/80'}
                           onClick={() => field.onChange('yes')}
                         >
-                          Yes
+                          <Building className="size-4 mr-2" />
+                          Yes, Registered
                         </Button>
                         <Button
                           type="button"
                           id="reg-no"
-                          variant={field.value === 'no' ? 'default' : 'outline'}
-                          size="sm"
+                          variant={field.value === 'no' ? 'destructive' : 'outline'}
+                          className={field.value === 'no' ? 'shadow-sm font-semibold' : 'border-border/80'}
                           onClick={() => field.onChange('no')}
                         >
-                          No
+                          No / In-Progress
                         </Button>
                       </div>
                       <FormMessage />
@@ -176,25 +167,26 @@ export function EligibilityPage(): React.ReactElement {
                   control={form.control}
                   name="authorizedPerson"
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>
-                        Are you an authorized signatory for the company?
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Are you an authorized company director or signatory?
                       </FormLabel>
-                      <div className="flex gap-3">
+                      <div className="grid grid-cols-2 gap-3">
                         <Button
                           type="button"
                           id="sig-yes"
                           variant={field.value === 'yes' ? 'default' : 'outline'}
-                          size="sm"
+                          className={field.value === 'yes' ? 'shadow-sm font-semibold' : 'border-border/80'}
                           onClick={() => field.onChange('yes')}
                         >
-                          Yes
+                          <ShieldCheck className="size-4 mr-2" />
+                          Yes, Authorized
                         </Button>
                         <Button
                           type="button"
                           id="sig-no"
-                          variant={field.value === 'no' ? 'default' : 'outline'}
-                          size="sm"
+                          variant={field.value === 'no' ? 'destructive' : 'outline'}
+                          className={field.value === 'no' ? 'shadow-sm font-semibold' : 'border-border/80'}
                           onClick={() => field.onChange('no')}
                         >
                           No
@@ -205,28 +197,28 @@ export function EligibilityPage(): React.ReactElement {
                   )}
                 />
 
-                {/* Q3 — D1: Years in business (dropdown) */}
+                {/* Q3: Years in business */}
                 <FormField
                   control={form.control}
                   name="yearsInBusiness"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        How long has the business been operating?
+                      <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Operating Track Record
                       </FormLabel>
                       <FormControl>
                         <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          className="flex h-10 w-full rounded-lg border border-border/80 bg-background/60 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-medium"
                           value={field.value ?? ''}
                           onChange={(e) =>
                             field.onChange(e.target.value === '' ? undefined : e.target.value)
                           }
                         >
-                          <option value="">Select a range</option>
+                          <option value="">Select track record length...</option>
                           <option value="0-1">Less than 2 years</option>
-                          <option value="2-5">2 to 5 years</option>
-                          <option value="6-10">6 to 10 years</option>
-                          <option value="10+">More than 10 years</option>
+                          <option value="2-5">2 to 5 years (Established)</option>
+                          <option value="6-10">6 to 10 years (Mature)</option>
+                          <option value="10+">More than 10 years (Enterprise)</option>
                         </select>
                       </FormControl>
                       <FormMessage />
@@ -234,19 +226,22 @@ export function EligibilityPage(): React.ReactElement {
                   )}
                 />
 
-                {/* Q4 — G8: Revenue over the past 2 years (split) */}
+                {/* Q4: Revenue */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="revenueYear1"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Most recent year revenue (UGX)</FormLabel>
+                        <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Latest Year Turnover (UGX)
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             min={0}
-                            placeholder="e.g. 500,000,000"
+                            placeholder="500000000"
+                            className="h-10 rounded-lg bg-background/50 font-mono"
                             {...field}
                             value={field.value ?? ''}
                             onChange={(e) => {
@@ -256,9 +251,9 @@ export function EligibilityPage(): React.ReactElement {
                           />
                         </FormControl>
                         {field.value != null && field.value > 0 && (
-                          <p className="text-xs text-muted-foreground">
+                          <div className="rounded-md bg-primary/10 border border-primary/20 px-2 py-0.5 text-xs font-mono font-bold text-primary">
                             {formatUGX(field.value)}
-                          </p>
+                          </div>
                         )}
                         <FormMessage />
                       </FormItem>
@@ -269,12 +264,15 @@ export function EligibilityPage(): React.ReactElement {
                     name="revenueYear2"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Prior year revenue (UGX)</FormLabel>
+                        <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Prior Year Turnover (UGX)
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             min={0}
-                            placeholder="e.g. 450,000,000"
+                            placeholder="450000000"
+                            className="h-10 rounded-lg bg-background/50 font-mono"
                             {...field}
                             value={field.value ?? ''}
                             onChange={(e) => {
@@ -284,9 +282,9 @@ export function EligibilityPage(): React.ReactElement {
                           />
                         </FormControl>
                         {field.value != null && field.value > 0 && (
-                          <p className="text-xs text-muted-foreground">
+                          <div className="rounded-md bg-primary/10 border border-primary/20 px-2 py-0.5 text-xs font-mono font-bold text-primary">
                             {formatUGX(field.value)}
-                          </p>
+                          </div>
                         )}
                         <FormMessage />
                       </FormItem>
@@ -296,68 +294,74 @@ export function EligibilityPage(): React.ReactElement {
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  variant="gradient"
+                  className="w-full h-10 font-semibold shadow-md"
                   disabled={mutation.isPending}
                 >
-                  {mutation.isPending && (
-                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  {mutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Evaluating Criteria...
+                    </>
+                  ) : (
+                    <>
+                      Run Instant Pre-Qualification
+                      <ArrowRight className="ml-2 size-4" />
+                    </>
                   )}
-                  Check Eligibility
                 </Button>
               </form>
             </Form>
 
-            {/* ── Result ── */}
+            {/* Assessment Result */}
             {result && (
-              <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-4 rounded-xl border p-4 transition-all">
                 {result.passed ? (
-                  <>
-                    <Alert variant="success">
-                      <CheckCircle2 className="size-4" />
-                      <AlertTitle>Eligible</AlertTitle>
-                      <AlertDescription>
-                        {result.message}
-                      </AlertDescription>
-                    </Alert>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-emerald-800 dark:text-emerald-300">
+                      <CheckCircle2 className="size-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold">Congratulations! Your Business Qualifies</p>
+                        <p className="text-xs opacity-90">{result.message}</p>
+                      </div>
+                    </div>
                     <Button
                       onClick={handleContinue}
-                      className="w-full"
+                      variant="gradient"
+                      className="w-full h-10 font-bold shadow-md"
                       disabled={!result.sessionToken}
                     >
-                      Continue to Registration
+                      Continue to Registration Wizard
+                      <ArrowRight className="ml-2 size-4" />
                     </Button>
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    <Alert variant="warning">
-                      <AlertTriangle className="size-4" />
-                      <AlertTitle>Not Eligible</AlertTitle>
-                      <AlertDescription>
-                        {result.message}
-                      </AlertDescription>
-                    </Alert>
-                    <p className="text-center text-sm text-muted-foreground">
-                      <a
-                        href="mailto:support@ris.co.ug"
-                        className="underline hover:text-primary"
-                      >
-                        Contact us for more information
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5 text-amber-800 dark:text-amber-300">
+                      <AlertTriangle className="size-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold">Criteria Not Met at This Time</p>
+                        <p className="text-xs opacity-90">{result.message}</p>
+                      </div>
+                    </div>
+                    <p className="text-center text-xs text-muted-foreground">
+                      Need help or have special contracts?{' '}
+                      <a href="mailto:support@ris.co.ug" className="text-primary font-bold hover:underline">
+                        Contact our Trade Finance Advisory Desk
                       </a>
                     </p>
-                  </>
+                  </div>
                 )}
               </div>
             )}
           </CardContent>
         </Card>
 
+        {/* Footer */}
         <p className="text-center text-sm text-muted-foreground">
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-1 underline hover:text-primary font-medium"
-          >
-            <ArrowLeft className="size-3" />
-            Back to Login
+          <Link to="/login" className="inline-flex items-center gap-1.5 text-primary font-medium hover:underline">
+            <ArrowLeft className="size-3.5" />
+            Already registered? Back to Sign In
           </Link>
         </p>
       </div>
@@ -366,3 +370,4 @@ export function EligibilityPage(): React.ReactElement {
 }
 
 export default EligibilityPage;
+
