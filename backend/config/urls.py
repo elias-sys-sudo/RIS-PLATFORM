@@ -16,6 +16,7 @@ urlpatterns = [
 
     # Domain API Routing
     path('api/v1/auth/', include('apps.authentication.urls')),
+    path('api/v1/onboarding/eligibility/check', include('apps.suppliers.onboarding_urls')),
     path('api/v1/suppliers/', include('apps.suppliers.urls')),
     path('api/v1/buyers/', include('apps.buyers.urls')),
     path('api/v1/invoices/', include('apps.invoices.urls')),
