@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Lock, CheckCircle2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,15 +18,6 @@ import { formatUGX } from '@/lib/format-ugx';
 import { formatRelative } from '@/lib/format-date';
 import { useAuthStore } from '@/store/auth.store';
 import type { PaymentRecord } from '../api/payments.api';
-
-const STATUS_COLORS: Record<string, string> = {
-  pending_first_auth: 'bg-amber-50 text-amber-700 border-amber-200',
-  pending_second_auth: 'bg-orange-50 text-orange-700 border-orange-200',
-  executing: 'bg-blue-50 text-blue-700 border-blue-200',
-  funded: 'bg-green-50 text-green-700 border-green-200',
-  failed: 'bg-red-50 text-red-700 border-red-200',
-  reversed: 'bg-gray-50 text-gray-500 border-gray-200',
-};
 
 const STATUS_LABELS: Record<string, string> = {
   pending_first_auth: '1st Auth Pending',
@@ -60,8 +52,9 @@ function PaymentTableRows({
   if (payments.length === 0) {
     return (
       <TableRow>
-        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-          No payments found.
+        <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+          <CheckCircle2 className="mx-auto size-8 text-emerald-500/50 mb-2" />
+          <p className="text-sm font-medium">No pending payment authorisations in this queue.</p>
         </TableCell>
       </TableRow>
     );
@@ -72,34 +65,49 @@ function PaymentTableRows({
       {payments.map((p) => (
         <TableRow
           key={p.id}
-          className="cursor-pointer hover:bg-muted/50"
+          className="cursor-pointer hover:bg-muted/50 transition-colors"
           onClick={() => onRowClick(p)}
         >
-          <TableCell className="font-mono text-sm">
+          <TableCell className="font-mono text-xs font-bold text-primary">
             {p.invoiceNumber ?? p.invoiceId.slice(0, 8)}
           </TableCell>
-          <TableCell>{p.supplierName ?? '---'}</TableCell>
-          <TableCell>{p.buyerName ?? '---'}</TableCell>
-          <TableCell className="text-right font-mono">{formatUGX(p.amount)}</TableCell>
+          <TableCell className="font-medium text-sm">{p.supplierName ?? '---'}</TableCell>
+          <TableCell className="text-sm text-muted-foreground">{p.buyerName ?? '---'}</TableCell>
+          <TableCell className="text-right font-mono font-bold text-sm">{formatUGX(p.amount)}</TableCell>
           <TableCell>
-            <Badge variant="outline" className="text-xs">{p.provider}</Badge>
+            <Badge variant="outline" className="text-[10px] font-semibold uppercase">{p.provider}</Badge>
           </TableCell>
           <TableCell>
-            <Badge variant="outline" className={STATUS_COLORS[p.status] ?? ''}>
+            <Badge
+              variant={
+                p.status === 'funded'
+                  ? 'success'
+                  : p.status === 'failed'
+                  ? 'destructive'
+                  : p.status === 'pending_first_auth'
+                  ? 'warning'
+                  : 'gold'
+              }
+              className="text-[10px] font-semibold uppercase tracking-wider"
+            >
               {STATUS_LABELS[p.status] ?? p.status}
             </Badge>
           </TableCell>
           <TableCell className="text-xs">
-            {p.dualAuthUser1 ? 'Done' : 'Pending'}
+            {p.dualAuthUser1 ? (
+              <Badge variant="success" className="text-[10px]">Signed</Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px] text-muted-foreground">Awaiting</Badge>
+            )}
           </TableCell>
           <TableCell>
             {isPendingAuth(p) ? (
               <SlaCountdown startedAt={p.createdAt} slaHours={72} />
             ) : (
-              <span className="text-xs text-muted-foreground">---</span>
+              <span className="text-xs text-muted-foreground font-mono">---</span>
             )}
           </TableCell>
-          <TableCell className="text-xs text-muted-foreground">
+          <TableCell className="text-xs text-muted-foreground font-mono">
             {formatRelative(p.createdAt)}
           </TableCell>
         </TableRow>
@@ -125,37 +133,54 @@ export function PaymentsListPage(): React.ReactElement {
   }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold font-display">Payments</h1>
-        <p className="text-sm text-muted-foreground">
-          Dual-authorisation payment queue — {pendingCount} awaiting your authorisation
-        </p>
+    <div className="space-y-6 animate-in fade-in-50 duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight">Payment Authorisation Cockpit</h1>
+            <Badge variant="gold" className="text-[10px] font-bold uppercase tracking-wider">
+              <Lock className="size-3 mr-1" />
+              Dual-Auth Secured
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Two-officer cryptographic sign-off required before executing banking &amp; Mobile Money disbursements
+          </p>
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
-          <TabsTrigger value="needs_my_auth">
-            Needs My Auth{pendingCount > 0 ? ` (${pendingCount})` : ''}
+        <TabsList className="bg-card/80 border border-border/70 p-1 rounded-xl">
+          <TabsTrigger value="needs_my_auth" className="text-xs rounded-lg font-semibold flex items-center gap-1.5">
+            Needs My Signature
+            {pendingCount > 0 && (
+              <Badge variant="gold" className="text-[10px] px-1.5 py-0 h-4 font-bold">
+                {pendingCount}
+              </Badge>
+            )}
           </TabsTrigger>
-          <TabsTrigger value="all">All Payments</TabsTrigger>
+          <TabsTrigger value="all" className="text-xs rounded-lg font-semibold">
+            All Disbursement Records ({allPayments.length})
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="needs_my_auth">
-          <PaymentsTable
-            payments={myAuthPayments}
-            isLoading={isLoading}
-            onRowClick={handleRowClick}
-          />
-        </TabsContent>
+        <div className="mt-4">
+          <TabsContent value="needs_my_auth">
+            <PaymentsTable
+              payments={myAuthPayments}
+              isLoading={isLoading}
+              onRowClick={handleRowClick}
+            />
+          </TabsContent>
 
-        <TabsContent value="all">
-          <PaymentsTable
-            payments={allPayments}
-            isLoading={isLoading}
-            onRowClick={handleRowClick}
-          />
-        </TabsContent>
+          <TabsContent value="all">
+            <PaymentsTable
+              payments={allPayments}
+              isLoading={isLoading}
+              onRowClick={handleRowClick}
+            />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
@@ -171,19 +196,19 @@ function PaymentsTable({
   onRowClick: (p: PaymentRecord) => void;
 }): React.ReactElement {
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-2xl border border-border/80 bg-card/80 backdrop-blur-md shadow-xs">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted/40">
           <TableRow>
-            <TableHead>Invoice #</TableHead>
-            <TableHead>Supplier</TableHead>
-            <TableHead>Buyer</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead>Provider</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>1st Auth</TableHead>
-            <TableHead>SLA</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider">Invoice #</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider">Supplier</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider">Buyer</TableHead>
+            <TableHead className="text-right text-xs font-bold uppercase tracking-wider">Net Payout</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider">Rail</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider">Status</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider">1st Signature</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider">Banking SLA</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider">Created</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -191,7 +216,7 @@ function PaymentsTable({
             ? Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
                   {Array.from({ length: 9 }).map((__, j) => (
-                    <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell key={j}><Skeleton className="h-4 w-16 rounded" /></TableCell>
                   ))}
                 </TableRow>
               ))
@@ -204,3 +229,4 @@ function PaymentsTable({
 }
 
 export default PaymentsListPage;
+
