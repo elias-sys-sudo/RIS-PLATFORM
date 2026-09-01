@@ -31,7 +31,7 @@ To swap providers later (Postmark, Mailgun, SES out of sandbox, SendGrid): only 
 ### A.1 Sign up
 
 1. https://resend.com/signup
-2. Sign in with `myaicloudsystem@gmail.com` (or your operator account).
+2. Sign in with `markelijah086@gmail.com` (or your operator account).
 3. Free tier, no credit card required.
 
 ### A.2 Add the domain
@@ -123,20 +123,20 @@ Each of our 10 sender addresses needs a place for replies to land. Free GoDaddy 
 1. https://account.godaddy.com → Products → Email & Office.
 2. Find `raphaintegrated.com` → click **Manage**.
 3. Look for **Forwarding** or **Email Forwarding** option.
-4. Create 10 forwards, all pointing to `myaicloudsystem@gmail.com`:
+4. Create 10 forwards, all pointing to `markelijah086@gmail.com`:
 
 | Forward from | Forward to | Purpose |
 |---|---|---|
-| `confirm@raphaintegrated.com` | myaicloudsystem@gmail.com | Buyer magic-link emails |
-| `payments@raphaintegrated.com` | myaicloudsystem@gmail.com | Payment/invoice lifecycle |
-| `kyc@raphaintegrated.com` | myaicloudsystem@gmail.com | KYC review status |
-| `collections@raphaintegrated.com` | myaicloudsystem@gmail.com | Collections/demand letters |
-| `support@raphaintegrated.com` | myaicloudsystem@gmail.com | Password reset, welcome, generic |
-| `credit@raphaintegrated.com` | myaicloudsystem@gmail.com | Credit officer inbound |
-| `finance@raphaintegrated.com` | myaicloudsystem@gmail.com | Finance manager inbound |
-| `compliance@raphaintegrated.com` | myaicloudsystem@gmail.com | Compliance officer inbound |
-| `legal@raphaintegrated.com` | myaicloudsystem@gmail.com | Legal team inbound |
-| `directors@raphaintegrated.com` | myaicloudsystem@gmail.com | Management inbound |
+| `confirm@raphaintegrated.com` | markelijah086@gmail.com | Buyer magic-link emails |
+| `payments@raphaintegrated.com` | markelijah086@gmail.com | Payment/invoice lifecycle |
+| `kyc@raphaintegrated.com` | markelijah086@gmail.com | KYC review status |
+| `collections@raphaintegrated.com` | markelijah086@gmail.com | Collections/demand letters |
+| `support@raphaintegrated.com` | markelijah086@gmail.com | Password reset, welcome, generic |
+| `credit@raphaintegrated.com` | markelijah086@gmail.com | Credit officer inbound |
+| `finance@raphaintegrated.com` | markelijah086@gmail.com | Finance manager inbound |
+| `compliance@raphaintegrated.com` | markelijah086@gmail.com | Compliance officer inbound |
+| `legal@raphaintegrated.com` | markelijah086@gmail.com | Legal team inbound |
+| `directors@raphaintegrated.com` | markelijah086@gmail.com | Management inbound |
 
 If GoDaddy's UI only lets you create them one at a time, that's fine — 10 forwards × ~30 sec each = 5 min.
 
@@ -204,7 +204,7 @@ curl -X POST https://api.resend.com/emails \
   -H "Content-Type: application/json" \
   -d '{
     "from": "RIS Platform <noreply@raphaintegrated.com>",
-    "to": "myaicloudsystem@gmail.com",
+    "to": "markelijah086@gmail.com",
     "subject": "RIS smoke test",
     "text": "If this lands in Gmail Inbox, the email pipeline is healthy."
   }'

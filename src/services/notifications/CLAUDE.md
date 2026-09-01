@@ -203,7 +203,7 @@ Development mode is unaffected — devs can boot with
 ```typescript
 import { sendSmokeTestEmail } from './email.provider';
 
-const result = await sendSmokeTestEmail('myAICloudSystem@gmail.com');
+const result = await sendSmokeTestEmail('markelijah086@gmail.com');
 console.log(result); // { success, provider: 'ses', messageId, durationMs }
 ```
 

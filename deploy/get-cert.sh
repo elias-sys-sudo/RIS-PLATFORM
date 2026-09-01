@@ -27,7 +27,7 @@ set -euo pipefail
 
 # ── Defaults — override via env or CLI ──────────────────────────────────────
 DOMAIN="${STAGING_DOMAIN:-staging.raphaintegrated.com}"
-EMAIL="${LETSENCRYPT_EMAIL:-myaicloudsystem@gmail.com}"
+EMAIL="${LETSENCRYPT_EMAIL:-markelijah086@gmail.com}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.production.yml}"
 FORCE_FLAG=""
 STAGING_FLAG=""
