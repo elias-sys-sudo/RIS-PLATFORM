@@ -28,4 +28,5 @@ urlpatterns = [
     path('api/v1/collections/', include('apps.collections.urls')),
     path('api/v1/settlements/', include('apps.settlements.urls')),
     path('api/v1/admin/risk-config/', include('apps.risk_engine.urls')),
+    path('api/v1/audit/', include('apps.audit.urls')),
 ]
