@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Landmark, TrendingUp, DollarSign, Clock, CheckCircle2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -29,23 +29,12 @@ import type {
   SettlementStatus,
 } from '../api/settlements.api';
 
-// ── Status display config ────────────────────────────────────────────────────
-
-const STATUS_COLORS: Record<SettlementStatus, string> = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  facility_repaid: 'bg-blue-50 text-blue-700 border-blue-200',
-  profit_booked: 'bg-green-50 text-green-700 border-green-200',
-  closed: 'bg-gray-50 text-gray-700 border-gray-200',
-};
-
 const STATUS_LABELS: Record<SettlementStatus, string> = {
-  pending: 'Pending',
-  facility_repaid: 'Facility Repaid',
-  profit_booked: 'Profit Booked',
-  closed: 'Closed',
+  pending: 'Pending Repayment',
+  facility_repaid: 'Bank Principal Repaid',
+  profit_booked: 'Margin Realized',
+  closed: 'Settlement Closed',
 };
-
-// ── Page component ───────────────────────────────────────────────────────────
 
 export function SettlementsListPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -65,78 +54,129 @@ export function SettlementsListPage(): React.ReactElement {
   const { data, isLoading } = useSettlements(filters);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold font-display">Settlements</h1>
-        <p className="text-sm text-muted-foreground">
-          Facility repayment and profit booking for collected invoices
-        </p>
+    <div className="space-y-6 animate-in fade-in-50 duration-300">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight">Settlement &amp; Profit Ledger</h1>
+            <Badge variant="gold" className="text-[10px] font-bold uppercase tracking-wider">
+              <Landmark className="size-3 mr-1" />
+              Automated Waterfall
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Automated waterfall accounting: partner bank facility repayment, margin booking &amp; audit reconciliation
+          </p>
+        </div>
       </div>
 
       {/* Summary stats */}
       {data?.summary && (
-        <div className="grid gap-4 md:grid-cols-4">
-          <SummaryCard
-            label="Total Net Profit"
-            value={formatUGX(data.summary.totalNetProfit)}
-            highlight
-          />
-          <SummaryCard
-            label="Total Facility Repaid"
-            value={formatUGX(data.summary.totalFacilityRepaid)}
-          />
-          <SummaryCard
-            label="Total Settlements"
-            value={String(data.summary.totalSettlements)}
-          />
-          <SummaryCard
-            label="Pending"
-            value={String(data.summary.pendingCount)}
-          />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card className="glass-card shadow-xs">
+            <CardContent className="p-3.5 flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                <TrendingUp className="size-4" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase text-muted-foreground">Total Realized Margin</p>
+                <p className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                  {formatUGX(data.summary.totalNetProfit)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card shadow-xs">
+            <CardContent className="p-3.5 flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Landmark className="size-4" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase text-muted-foreground">Facilities Repaid</p>
+                <p className="text-xl font-bold font-mono text-foreground">{formatUGX(data.summary.totalFacilityRepaid)}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card shadow-xs">
+            <CardContent className="p-3.5 flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <DollarSign className="size-4" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase text-muted-foreground">Total Settlements</p>
+                <p className="text-xl font-bold font-mono text-foreground">{data.summary.totalSettlements}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-card shadow-xs">
+            <CardContent className="p-3.5 flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                <Clock className="size-4" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase text-muted-foreground">Pending Allocation</p>
+                <p className="text-xl font-bold font-mono text-foreground">{data.summary.pendingCount}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search by invoice or company..."
+            placeholder="Search settlements by invoice # or company..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="pl-9"
+            className="pl-9 pr-8 h-10 rounded-xl bg-card/60 border-border/80 text-xs focus-visible:ring-primary"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="size-4" />
+            </button>
+          )}
         </div>
+
         <Select
           value={statusFilter}
           onValueChange={(v) => { setStatusFilter(v); setPage(1); }}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-48 rounded-xl bg-card/60 border-border/80 text-xs font-semibold">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="facility_repaid">Facility Repaid</SelectItem>
-            <SelectItem value="profit_booked">Profit Booked</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
+          <SelectContent className="rounded-xl border-border/80">
+            <SelectItem value="all" className="text-xs">All waterfall statuses</SelectItem>
+            <SelectItem value="pending" className="text-xs">Pending Repayment</SelectItem>
+            <SelectItem value="facility_repaid" className="text-xs">Bank Facility Repaid</SelectItem>
+            <SelectItem value="profit_booked" className="text-xs">Profit Booked</SelectItem>
+            <SelectItem value="closed" className="text-xs">Settlement Closed</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="overflow-hidden rounded-2xl border border-border/80 bg-card/80 backdrop-blur-md shadow-xs">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/40">
             <TableRow>
-              <TableHead>Invoice #</TableHead>
-              <TableHead>Supplier</TableHead>
-              <TableHead>Buyer</TableHead>
-              <TableHead className="text-right">Collected</TableHead>
-              <TableHead className="text-right">Advance</TableHead>
-              <TableHead className="text-right">Net Profit</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider">Invoice #</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider">Supplier</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider">Buyer (Debtor)</TableHead>
+              <TableHead className="text-right text-xs font-bold uppercase tracking-wider">Collected Principal</TableHead>
+              <TableHead className="text-right text-xs font-bold uppercase tracking-wider">Bank Advance</TableHead>
+              <TableHead className="text-right text-xs font-bold uppercase tracking-wider">Net Realized Margin</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider">Waterfall Status</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider">Settled Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -145,7 +185,7 @@ export function SettlementsListPage(): React.ReactElement {
                   <TableRow key={i}>
                     {Array.from({ length: 8 }).map((__, j) => (
                       <TableCell key={j}>
-                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-16 rounded" />
                       </TableCell>
                     ))}
                   </TableRow>
@@ -153,32 +193,38 @@ export function SettlementsListPage(): React.ReactElement {
               : data?.data.map((s) => (
                   <TableRow
                     key={s.id}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => navigate(`/settlements/${s.id}`)}
                   >
-                    <TableCell className="font-mono text-sm">
+                    <TableCell className="font-mono text-xs font-bold text-primary">
                       {s.invoiceNumber}
                     </TableCell>
-                    <TableCell>{s.supplierName}</TableCell>
-                    <TableCell>{s.buyerName}</TableCell>
-                    <TableCell className="text-right font-mono">
+                    <TableCell className="font-medium text-sm">{s.supplierName}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{s.buyerName}</TableCell>
+                    <TableCell className="text-right font-mono font-bold text-sm">
                       {formatUGX(s.collectedAmount)}
                     </TableCell>
-                    <TableCell className="text-right font-mono">
+                    <TableCell className="text-right font-mono font-bold text-sm text-foreground">
                       {formatUGX(s.advanceAmount)}
                     </TableCell>
-                    <TableCell className="text-right font-mono font-medium text-green-700">
+                    <TableCell className="text-right font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
                       {formatUGX(s.netProfit)}
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant="outline"
-                        className={STATUS_COLORS[s.status] ?? ''}
+                        variant={
+                          s.status === 'profit_booked' || s.status === 'closed'
+                            ? 'success'
+                            : s.status === 'facility_repaid'
+                            ? 'info'
+                            : 'warning'
+                        }
+                        className="text-[10px] font-semibold uppercase"
                       >
                         {STATUS_LABELS[s.status] ?? s.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-xs font-mono text-muted-foreground">
                       {formatDate(s.settledAt ?? s.createdAt)}
                     </TableCell>
                   </TableRow>
@@ -187,9 +233,10 @@ export function SettlementsListPage(): React.ReactElement {
               <TableRow>
                 <TableCell
                   colSpan={8}
-                  className="text-center py-8 text-muted-foreground"
+                  className="text-center py-12 text-muted-foreground"
                 >
-                  No settlements found.
+                  <CheckCircle2 className="mx-auto size-8 text-muted-foreground/40 mb-2" />
+                  <p className="text-sm font-medium">No settlements matching current filter.</p>
                 </TableCell>
               </TableRow>
             )}
@@ -199,8 +246,8 @@ export function SettlementsListPage(): React.ReactElement {
 
       {/* Pagination */}
       {data && data.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-xs text-muted-foreground font-mono">
             Page {data.page} of {data.totalPages}
           </p>
           <div className="flex gap-2">
@@ -209,6 +256,7 @@ export function SettlementsListPage(): React.ReactElement {
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
+              className="text-xs rounded-lg"
             >
               Previous
             </Button>
@@ -217,6 +265,7 @@ export function SettlementsListPage(): React.ReactElement {
               size="sm"
               disabled={page >= data.totalPages}
               onClick={() => setPage(page + 1)}
+              className="text-xs rounded-lg"
             >
               Next
             </Button>
@@ -227,31 +276,5 @@ export function SettlementsListPage(): React.ReactElement {
   );
 }
 
-// ── Summary card helper ──────────────────────────────────────────────────────
-
-function SummaryCard({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}): React.ReactElement {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p
-          className={`text-lg font-bold font-mono ${
-            highlight ? 'text-green-700' : ''
-          }`}
-        >
-          {value}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
 export default SettlementsListPage;
+
