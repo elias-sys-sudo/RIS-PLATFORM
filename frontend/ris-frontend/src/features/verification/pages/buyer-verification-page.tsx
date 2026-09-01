@@ -239,9 +239,18 @@ function ConfirmForm({
           <p className="text-sm text-destructive">{submitError}</p>
         )}
 
-        <Button type="submit" size="lg" className="w-full bg-green-600 hover:bg-green-700" disabled={!allChecked || isPending}>
-          {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-          Confirm Invoice
+        <Button type="submit" variant="gradient" size="lg" className="w-full font-bold shadow-md h-11 text-sm cursor-pointer" disabled={!allChecked || isPending}>
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Recording Confirmation...
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="mr-2 size-4" />
+              Confirm &amp; Acknowledge Assignment
+            </>
+          )}
         </Button>
       </form>
     </Form>
