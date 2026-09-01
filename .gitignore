@@ -23,3 +23,15 @@ logs/
 .vscode/
 skills-lock.json
 .gstack/
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+*.sqlite3
+staticfiles/
+media/
+.pytest_cache/
