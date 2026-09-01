@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>RIS — Math & Business Rules Atlas</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{
+    --bg:#0a0e1c; --panel:#121830; --panel2:#1a2244; --line:#2a3360;
+    --text:#e7ecff; --muted:#8a96c8;
+    --math:#5cffd1; --rule:#ffb454;
+    --math-bg:rgba(92,255,209,.08); --rule-bg:rgba(255,180,84,.08);
+    --chip:#243056;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,Segoe UI,Roboto,Inter,sans-serif;font-size:14px}
+  header{padding:20px 28px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#0f1530,#0a0e1c)}
+  header h1{margin:0;font-size:20px}
+  header .sub{color:var(--muted);font-size:12px;margin-top:4px}
+  .stats{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:10px 16px}
+  .stat .n{font-size:22px;font-weight:700}
+  .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .stat.math .n{color:var(--math)}
+  .stat.rule .n{color:var(--rule)}
+
+  .toolbar{position:sticky;top:0;z-index:10;background:#0a0e1c;padding:14px 28px;
+    border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;
+    flex-wrap:wrap}
+  input[type=text]{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    padding:10px 14px;border-radius:8px;font-size:13px;width:280px;outline:none}
+  input[type=text]:focus{border-color:var(--math)}
+  .toggles{display:flex;gap:6px;flex-wrap:wrap}
+  .tog{padding:7px 12px;border-radius:999px;background:var(--chip);color:var(--muted);
+    font-size:11px;cursor:pointer;border:1px solid transparent;
+    text-transform:uppercase;letter-spacing:.5px;user-select:none}
+  .tog.active{background:linear-gradient(135deg,#3a4a8a,#243056);color:var(--text);
+    border-color:var(--line)}
+  .tog.math.active{color:var(--math);border-color:var(--math)}
+  .tog.rule.active{color:var(--rule);border-color:var(--rule)}
+
+  main{padding:20px 28px 60px}
+  .module{margin-bottom:28px}
+  .module h2{font-size:14px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:2px;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+  .module h2 .count{background:var(--chip);color:var(--text);padding:2px 8px;
+    border-radius:999px;font-size:10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;border-left:4px solid var(--line);transition:transform .15s}
+  .card.MATH{border-left-color:var(--math);background:linear-gradient(180deg,var(--math-bg),var(--panel) 30%)}
+  .card.RULE{border-left-color:var(--rule);background:linear-gradient(180deg,var(--rule-bg),var(--panel) 30%)}
+  .card:hover{transform:translateY(-2px)}
+  .card .head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;
+    margin-bottom:8px}
+  .card .title{font-weight:600;font-size:13px;line-height:1.35}
+  .card .badge{font-size:9px;padding:3px 7px;border-radius:4px;letter-spacing:1px;
+    font-weight:700;flex-shrink:0}
+  .card.MATH .badge{background:var(--math);color:#0a0e1c}
+  .card.RULE .badge{background:var(--rule);color:#0a0e1c}
+  .card .desc{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+  .card .formula{background:#070b18;border:1px solid var(--line);border-radius:6px;
+    padding:8px 10px;font-family:ui-monospace,Menlo,monospace;font-size:11px;
+    color:var(--text);overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+  .card .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .card .meta span{font-size:9px;background:#0d1428;border:1px solid var(--line);
+    color:var(--muted);padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace}
+  .empty{color:var(--muted);text-align:center;padding:60px;font-size:13px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>RIS — Math &amp; Business Rules Atlas</h1>
+  <div class="sub">Every formula and business rule across the 13 modules · grouped, searchable, filterable</div>
+  <div class="stats">
+    <div class="stat math"><div class="n" id="stat-math">0</div><div class="l">Math formulas</div></div>
+    <div class="stat rule"><div class="n" id="stat-rule">0</div><div class="l">Business rules</div></div>
+    <div class="stat"><div class="n" id="stat-mod">0</div><div class="l">Modules</div></div>
+    <div class="stat"><div class="n" id="stat-shown">0</div><div class="l">Currently shown</div></div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="🔎 Search formulas, rules, files…" />
+  <div class="toggles" id="cat-toggles">
+    <div class="tog math active" data-cat="MATH">MATH</div>
+    <div class="tog rule active" data-cat="RULE">RULE</div>
+  </div>
+  <div class="toggles" id="mod-toggles"></div>
+</div>
+
+<main id="main"></main>
+
+<script>
+const ITEMS = [
+  // ===== PRICING =====
+  {mod:"pricing",cat:"MATH",file:"pricing.service.ts",fn:"calculatePricing",lines:"306-337",
+   title:"Total discount rate",
+   desc:"Annualised rate = bank cost + risk premium + RIS margin, pro-rated to invoice tenor.",
+   formula:"discountRate = (bankRate + riskRate + mmsRate) × (tenorDays / 365)"},
+  {mod:"pricing",cat:"MATH",file:"pricing.service.ts",fn:"calculatePricing",lines:"319",
+   title:"Advance amount",
+   desc:"Cash RIS pays the supplier upfront, capped by max advance % from risk score.",
+   formula:"advanceAmount = faceValue × maxAdvancePct"},
+  {mod:"pricing",cat:"MATH",file:"pricing.service.ts",fn:"calculatePricing",lines:"320",
+   title:"Discount amount",
+   desc:"Fee RIS keeps from face value (the discount on the invoice).",
+   formula:"discountAmount = faceValue × discountRateScaled / PRECISION"},
+  {mod:"pricing",cat:"MATH",file:"pricing.service.ts",fn:"calculatePricing",lines:"321",
+   title:"Net payment to supplier",
+   desc:"What hits the supplier's bank account on disbursement.",
+   formula:"netPayment = advanceAmount − discountAmount"},
+  {mod:"pricing",cat:"MATH",file:"pricing.service.ts",fn:"calculatePricing",lines:"324",
+   title:"Bank cost amount",
+   desc:"Interest RIS owes the funding bank for using the facility over the tenor.",
+   formula:"bankCostAmount = advanceAmount × bankRate × tenorDays / 365"},
+  {mod:"pricing",cat:"MATH",file:"pricing.service.ts",fn:"calculatePricing",lines:"325",
+   title:"RIS net profit",
+   desc:"What RIS keeps after paying the bank's facility cost.",
+   formula:"mmsNetProfit = discountAmount − bankCostAmount"},
+  {mod:"pricing",cat:"MATH",file:"pricing.service.ts",fn:"buildFeeBreakdown",lines:"360-384",
+   title:"Fee breakdown decomposition",
+   desc:"Splits discount into bank, risk, and margin components for supplier transparency.",
+   formula:"discount = bankComponent + riskComponent + mmsComponent"},
+  {mod:"pricing",cat:"RULE",file:"pricing.service.ts",fn:"validateRateCap",lines:"391-403",
+   title:"Rate cap (15% annualised)",
+   desc:"Hard ceiling on total annual rate to protect suppliers from over-pricing.",
+   formula:"if totalAnnualRate > 0.15 → reject RATE_CAP_EXCEEDED"},
+  {mod:"pricing",cat:"RULE",file:"pricing.service.ts",fn:"fetchAndValidateInvoice",lines:"416-421",
+   title:"Status guard: only 'scored'",
+   desc:"Pricing can only run on freshly-scored invoices.",
+   formula:"if invoice.status !== 'scored' → reject INVALID_STATUS"},
+  {mod:"pricing",cat:"RULE",file:"pricing.service.ts",fn:"fetchAndValidateRiskScore",lines:"432-434",
+   title:"Prevent double-pricing",
+   desc:"Idempotency: refuse to re-price an already-priced invoice.",
+   formula:"if risk.bank_cost_rate !== null → reject ALREADY_PRICED"},
+  {mod:"pricing",cat:"RULE",file:"pricing.service.ts",fn:"fetchActiveFacility",lines:"441-448",
+   title:"Active facility required",
+   desc:"Pricing needs a live bank facility to source the bank cost rate.",
+   formula:"if no active facility → reject NO_ACTIVE_FACILITY"},
+  {mod:"pricing",cat:"RULE",file:"pricing.service.ts",fn:"acceptPricing",lines:"178-180",
+   title:"Single-acceptance idempotency",
+   desc:"Supplier can accept pricing only once per invoice.",
+   formula:"if pricing_accepted_at !== null → reject ALREADY_ACCEPTED"},
+  {mod:"pricing",cat:"RULE",file:"pricing.service.ts",fn:"<constants>",lines:"20-21",
+   title:"BigInt precision constants",
+   desc:"Precision used to scale rates (8 decimals) and a fixed 365-day year.",
+   formula:"PRECISION = 100_000_000n  ·  DAYS_PER_YEAR = 365n"},
+
+  // ===== RISK ENGINE =====
+  {mod:"risk-engine",cat:"MATH",file:"risk-engine.service.ts",fn:"scoreInvoice",lines:"67-68",
+   title:"Composite risk score",
+   desc:"Weighted average of 5 factor scores; weights sum to 1.0.",
+   formula:"finalScore = Σ(factor.rawScore × factor.weight)"},
+  {mod:"risk-engine",cat:"MATH",file:"factors/tenor-scorer.ts",fn:"calculateTenorRaw",lines:"30-35",
+   title:"Tenor scoring bands",
+   desc:"Shorter tenors score higher (lower risk).",
+   formula:"1–30d→100 · 31–60d→75 · 61–90d→50 · else→0"},
+  {mod:"risk-engine",cat:"MATH",file:"factors/buyer-credit-scorer.ts",fn:"CREDIT_RATING_SCORES",lines:"8-13",
+   title:"Buyer credit rating mapping",
+   desc:"Letter grade → numeric score.",
+   formula:"A→100 · B→75 · C→50 · D→25"},
+  {mod:"risk-engine",cat:"MATH",file:"factors/concentration-risk-scorer.ts",fn:"calculateConcentrationRaw",lines:"36-42",
+   title:"Concentration bands",
+   desc:"Punishes buyer over-exposure relative to portfolio.",
+   formula:"≤40%→100 · 41–60→75 · 61–75→50 · 76–90→25 · >90→0"},
+  {mod:"risk-engine",cat:"MATH",file:"factors/supplier-track-record-scorer.ts",fn:"calculateTrackRecordRaw",lines:"42-58",
+   title:"Track record bands",
+   desc:"Rewards suppliers with history and >95% on-time performance.",
+   formula:"defaults→25 · first→50 · 1–3 ontime→70 · 4–10 >90%→85 · 11+ >95%→100"},
+  {mod:"risk-engine",cat:"MATH",file:"factors/collateral-scorer.ts",fn:"COLLATERAL_SCORES",lines:"9-17",
+   title:"Collateral type scoring",
+   desc:"Strongest collateral types score highest.",
+   formula:"bank_guarantee→100 · fixed_deposit→85 · assignment→75 · bond→70 · cheque→60 · corp_guarantee→40 · none→0"},
+  {mod:"risk-engine",cat:"RULE",file:"risk-engine.service.ts",fn:"determineRecommendation",lines:"189-195",
+   title:"Recommendation thresholds",
+   desc:"Composite score routes invoice to auto-approve, manager review, or rejection.",
+   formula:"≥75 → AUTO  ·  50–74 → REFER  ·  <50 → REJECT"},
+  {mod:"risk-engine",cat:"RULE",file:"risk-engine.service.ts",fn:"determineMaxAdvance",lines:"201-211",
+   title:"Max advance % tiers",
+   desc:"Better scores unlock a higher advance percentage.",
+   formula:"≥75→95% · 60–74→90% · 50–59→85% · <50→0%"},
+  {mod:"risk-engine",cat:"RULE",file:"risk-engine.service.ts",fn:"determineRiskPremium",lines:"217-227",
+   title:"Risk premium tiers",
+   desc:"Lower scores attract higher risk premium added to the rate.",
+   formula:"≥80→0% · 70–79→0.5% · 60–69→1% · 50–59→1.5%"},
+  {mod:"risk-engine",cat:"RULE",file:"risk-engine.service.ts",fn:"scoreInvoice",lines:"76",
+   title:"Status transition on score",
+   desc:"REJECT recommendation immediately rejects the invoice.",
+   formula:"if recommendation === REJECT → status='rejected' else 'scored'"},
+  {mod:"risk-engine",cat:"RULE",file:"risk-engine.service.ts",fn:"fetchAndValidateInvoice",lines:"155-161",
+   title:"Prevent double-scoring",
+   desc:"An invoice cannot be scored twice.",
+   formula:"if existing risk_assessment → reject ALREADY_SCORED"},
+  {mod:"risk-engine",cat:"RULE",file:"risk-engine.service.ts",fn:"<weights>",lines:"—",
+   title:"Factor weight configuration",
+   desc:"DB-backed configurable weights, must sum to 1.0.",
+   formula:"buyer 0.30 · track 0.25 · collateral 0.20 · concentration 0.15 · tenor 0.10"},
+
+  // ===== APPROVALS =====
+  {mod:"approvals",cat:"RULE",file:"approvals.service.ts",fn:"determineTier",lines:"65",
+   title:"TIER 4 — board level",
+   desc:"Largest deals or worst scores route to management board.",
+   formula:"if face > 200_000_000 OR score < 30 → TIER_4"},
+  {mod:"approvals",cat:"RULE",file:"approvals.service.ts",fn:"determineTier",lines:"70",
+   title:"TIER 3 — credit committee",
+   desc:"Mid-large deals or weak scores need 2 different officers.",
+   formula:"if face > 50_000_000 OR score < 50 → TIER_3 (quorum)"},
+  {mod:"approvals",cat:"RULE",file:"approvals.service.ts",fn:"determineTier",lines:"75",
+   title:"TIER 2 — credit officer",
+   desc:"Mid-size or AML-flagged invoices: single officer approval.",
+   formula:"if face ≥ 10_000_000 OR score 50–75 OR aml_flagged → TIER_2"},
+  {mod:"approvals",cat:"RULE",file:"approvals.service.ts",fn:"determineTier",lines:"80",
+   title:"AUTO — system-approved",
+   desc:"Small clean deals with high scores auto-approve.",
+   formula:"if face < 10_000_000 AND score ≥ 75 AND not aml_flagged → AUTO"},
+  {mod:"approvals",cat:"RULE",file:"approvals.service.ts",fn:"authoriseSecondAuth",lines:"225",
+   title:"Quorum: 2 different officers",
+   desc:"Same person cannot supply both Tier-3 approvals.",
+   formula:"if dual_auth_user_1 === userId → reject SAME_AUTHORISER"},
+  {mod:"approvals",cat:"RULE",file:"approvals.service.ts",fn:"checkSlaBreaches",lines:"191",
+   title:"24h SLA escalation",
+   desc:"Escalate to management if approval pending too long.",
+   formula:"if hours_since_scored ≥ 24 → escalate"},
+
+  // ===== PAYMENTS =====
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"checkKillSwitch",lines:"67-75",
+   title:"Global kill switch",
+   desc:"Compliance can freeze all payments via a system setting.",
+   formula:"if system_setting.payment_kill_switch === 'true' → block"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"initiatePayment",lines:"96-102",
+   title:"Collateral coverage ratio ≥ 50%",
+   desc:"Payment cannot proceed without enough collateral covering the advance.",
+   formula:"if collateral / advance < 0.50 → reject COLLATERAL_INSUFFICIENT"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"initiatePayment",lines:"89-94",
+   title:"Status guard: 'approved' only",
+   desc:"Only invoices in 'approved' status can begin payment flow.",
+   formula:"if invoice.status !== 'approved' → reject"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"initiatePayment",lines:"106-109",
+   title:"Idempotency on payment creation",
+   desc:"Duplicate calls return the same payment record.",
+   formula:"if existing payment by invoiceId → return existing"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"authoriseSecondAuth",lines:"225-230",
+   title:"Dual-auth: different users",
+   desc:"App-layer enforcement that user1 ≠ user2 (also enforced by DB trigger).",
+   formula:"if dual_auth_user_1 === userId → reject SAME_AUTHORISER"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"authoriseFirstAuth",lines:"152-175",
+   title:"2FA recency window",
+   desc:"Authorising user must have re-verified 2FA recently.",
+   formula:"if (now − last_2fa_verified) > 60 min → reject TWO_FA_REVERIFICATION"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"checkBusinessHours",lines:"686-711",
+   title:"Business hours flag",
+   desc:"Auths outside Mon-Fri 07:00–20:00 EAT are flagged (non-blocking).",
+   formula:"if weekend OR EAT hour < 7 OR ≥ 20 → AFTER_HOURS_PAYMENT audit"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"verifyWebhookSignature",lines:"538-571",
+   title:"Webhook HMAC verification",
+   desc:"Provider webhooks verified with HMAC-SHA256, timing-safe compare.",
+   formula:"if !timingSafeEqual(hmac_sha256(body,secret), header) → reject"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"handleMtnWebhook",lines:"329-336",
+   title:"Webhook idempotency",
+   desc:"Re-delivered webhook events are silently acknowledged, not reprocessed.",
+   formula:"if alreadyProcessed(externalId) → return 200 OK"},
+  {mod:"payments",cat:"RULE",file:"payments.service.ts",fn:"checkSlaBreaches",lines:"414-436",
+   title:"72h payment SLA",
+   desc:"Payments pending more than 72h escalate to MD.",
+   formula:"if hours_pending ≥ 72 → escalate"},
+
+  // ===== COLLECTIONS =====
+  {mod:"collections",cat:"MATH",file:"collections.service.ts",fn:"calculatePenalty",lines:"70-85",
+   title:"Daily penalty (BigInt)",
+   desc:"Accrues a daily penalty as integer-only arithmetic.",
+   formula:"penalty = (face × rateScaled × daysOverdue) / PENALTY_PRECISION\nPENALTY_PRECISION = 1_000_000n  ·  default rate = 0.001 (0.1%/day)"},
+  {mod:"collections",cat:"RULE",file:"collections.service.ts",fn:"determineEscalationLevel",lines:"185-190",
+   title:"Escalation level by days overdue",
+   desc:"Tiered escalation triggered automatically by aging.",
+   formula:"≥14 → 3 (legal)\n≥7  → 2 (formal notice)\n≥3  → 1 (reminder)\n<3  → 0 (none)"},
+  {mod:"collections",cat:"RULE",file:"collections.service.ts",fn:"escalateCollection",lines:"466",
+   title:"Escalation ceiling",
+   desc:"Cannot escalate above level 3.",
+   formula:"newLevel = min(currentLevel + 1, 3)"},
+  {mod:"collections",cat:"RULE",file:"collections CLAUDE.md",fn:"SAR trigger",lines:"—",
+   title:"SAR (Suspicious Activity Report)",
+   desc:"Triggers a Bank of Uganda FIA filing on large overdue + legal-level escalation.",
+   formula:"if escalation ≥ 3 AND face ≥ 100_000_000 → SAR flag"},
+  {mod:"collections",cat:"RULE",file:"collections.service.ts",fn:"processOverdueInvoice",lines:"118-176",
+   title:"Overdue T+1 trigger",
+   desc:"Scheduled job creates a collection record one day after due date.",
+   formula:"on (now − due_date) ≥ 1 day → create collection, level=1"},
+  {mod:"collections",cat:"RULE",file:"collections.service.ts",fn:"deescalateCollection",lines:"509-514",
+   title:"De-escalation floor",
+   desc:"Cannot de-escalate below 0.",
+   formula:"if currentLevel ≤ 0 → reject"},
+
+  // ===== SETTLEMENTS =====
+  {mod:"settlements",cat:"MATH",file:"settlements.service.ts",fn:"bookProfit",lines:"187",
+   title:"Net profit after collection",
+   desc:"Final profit booked once buyer pays and the bank facility is repaid.",
+   formula:"netProfit = discountEarned − bankCostPaid + penaltyIncome"},
+  {mod:"settlements",cat:"RULE",file:"settlements.service.ts",fn:"assertTransition",lines:"30-44",
+   title:"Linear status machine",
+   desc:"Settlement state machine forbids backtracking.",
+   formula:"pending → facility_repaid → profit_booked → closed"},
+  {mod:"settlements",cat:"RULE",file:"settlements CLAUDE.md",fn:"DB trigger",lines:"—",
+   title:"Profit booking immutability",
+   desc:"DB trigger blocks UPDATE/DELETE on profit_bookings (audit/compliance).",
+   formula:"raise exception on UPDATE/DELETE FROM profit_bookings"},
+
+  // ===== FACILITIES =====
+  {mod:"facilities",cat:"MATH",file:"facilities.service.ts",fn:"calculateDailyInterest",lines:"46-53",
+   title:"Daily facility interest (BigInt)",
+   desc:"Bank facility interest accrues daily on outstanding drawdowns.",
+   formula:"daily = principal × annualRate / 365\nRATE_PRECISION = 1_000_000_000n (1e9)"},
+  {mod:"facilities",cat:"MATH",file:"facilities.service.ts",fn:"calculateUtilisation",lines:"58-63",
+   title:"Facility utilisation %",
+   desc:"How much of the facility's total limit has been drawn.",
+   formula:"utilisation% = (drawnAmount × 100) / totalLimit"},
+  {mod:"facilities",cat:"RULE",file:"facilities.service.ts",fn:"<constants>",lines:"22-24",
+   title:"Utilisation thresholds",
+   desc:"Warning and critical alerts; maturity heads-up window.",
+   formula:"WARNING = 80%  ·  CRITICAL = 90%  ·  MATURITY_ALERT = 5 days"},
+  {mod:"facilities",cat:"RULE",file:"facilities.service.ts",fn:"createDrawdown",lines:"108-110",
+   title:"Drawdown availability",
+   desc:"Cannot draw beyond the facility's total limit.",
+   formula:"if (drawn + principal) > totalLimit → reject"},
+  {mod:"facilities",cat:"RULE",file:"facilities.service.ts",fn:"validateMaturity",lines:"109",
+   title:"Maturity coverage",
+   desc:"Invoice due date must fall before facility maturity.",
+   formula:"if invoice.dueDate > facility.maturityDate → reject"},
+  {mod:"facilities",cat:"RULE",file:"facilities CLAUDE.md",fn:"getActiveFacility",lines:"—",
+   title:"Single active facility",
+   desc:"Only one facility can be in 'active' state at any time.",
+   formula:"count(status='active') ≤ 1"},
+
+  // ===== INVOICES =====
+  {mod:"invoices",cat:"MATH",file:"invoices.service.ts",fn:"computeTenorDays",lines:"27-30",
+   title:"Tenor (ceiling division)",
+   desc:"Days from now to due date, rounding partial days up.",
+   formula:"tenor = ceil((dueDate − now) / 86_400_000 ms)"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"<constants>",lines:"19-20",
+   title:"Tenor range",
+   desc:"Allowed invoice tenor window.",
+   formula:"7 ≤ tenorDays ≤ 90"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"submitInvoice",lines:"224-226",
+   title:"Buyer credit limit",
+   desc:"Submission cannot push the buyer over their approved exposure.",
+   formula:"used + face ≤ approvedLimit"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"<constants>",lines:"21",
+   title:"AML threshold (100M UGX)",
+   desc:"Invoices ≥ 100M trigger an AML flag and compliance review.",
+   formula:"if face ≥ 100_000_000 → AML flag"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"checkStructuring",lines:"47-84",
+   title:"Structuring detection",
+   desc:"Detects attempts to split big amounts across smaller invoices to dodge AML.",
+   formula:"if (30-day rolling sum ≥ 100M) AND (each < 100M) → STRUCTURING_RISK"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"checkVelocitySpike",lines:"89-123",
+   title:"Velocity spike detection",
+   desc:"Sudden surge in monthly volume vs 6-month baseline.",
+   formula:"if currentMonthCount ≥ 3 × (6-month avg) → VELOCITY_SPIKE"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"submitInvoice step1",lines:"143-158",
+   title:"Supplier KYC gate",
+   desc:"Only KYC-approved suppliers can submit.",
+   formula:"if kyc_status !== 'approved' → reject"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"submitInvoice step2",lines:"163-177",
+   title:"Duplicate invoice prevention",
+   desc:"Invoice number unique per supplier (not globally).",
+   formula:"unique(invoice_number, supplier_id)"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"submitInvoice",lines:"133-224",
+   title:"5-step validation chain (always logged)",
+   desc:"All 5 steps run + audit, even after early failure (compliance trail).",
+   formula:"log every step regardless of pass/fail"},
+  {mod:"invoices",cat:"RULE",file:"invoices.service.ts",fn:"<constants>",lines:"625",
+   title:"Cooling-off window",
+   desc:"Supplier may withdraw a freshly-submitted invoice within 48h.",
+   formula:"COOLING_OFF_HOURS = 48"},
+
+  // ===== VERIFICATION =====
+  {mod:"verification",cat:"RULE",file:"verification.service.ts",fn:"generateConfirmationToken",lines:"60",
+   title:"48h token expiry",
+   desc:"Buyer confirmation token expires after 48 hours.",
+   formula:"expiresAt = now + 48h"},
+  {mod:"verification",cat:"RULE",file:"verification.service.ts",fn:"getConfirmationPageData",lines:"112-114",
+   title:"SHA-256 hash compare",
+   desc:"Tokens are stored as SHA-256 hash; compare in timing-safe manner.",
+   formula:"timingSafeEqual(sha256(rawToken), stored.hash)"},
+  {mod:"verification",cat:"RULE",file:"verification.service.ts",fn:"confirmInvoice",lines:"148",
+   title:"4 confirmation flags required",
+   desc:"Buyer must acknowledge all 4 obligations to confirm.",
+   formula:"flag1 AND flag2 AND flag3 AND flag4 = true"},
+  {mod:"verification",cat:"RULE",file:"verification.service.ts",fn:"confirmInvoice",lines:"155-162",
+   title:"Single-use token",
+   desc:"Token cannot be replayed after first use.",
+   formula:"if rowCount === 0 (already used) → reject"},
+
+  // ===== ONBOARDING =====
+  {mod:"onboarding",cat:"RULE",file:"onboarding.service.ts",fn:"checkEligibility",lines:"116-139",
+   title:"Eligibility (3-factor AND)",
+   desc:"Pre-registration self-check.",
+   formula:"registered_company AND authorized_person AND years_in_business ≥ 1"},
+  {mod:"onboarding",cat:"RULE",file:"onboarding.service.ts",fn:"<constants>",lines:"48",
+   title:"Bcrypt cost = 12",
+   desc:"Password hashing strength.",
+   formula:"BCRYPT_ROUNDS = 12"},
+  {mod:"onboarding",cat:"RULE",file:"onboarding.service.ts",fn:"<constants>",lines:"50-51",
+   title:"Document upload limits",
+   desc:"Allowed mime types and max file size for KYC docs.",
+   formula:"mime ∈ {pdf, jpeg, png}  ·  size ≤ 10 MB"},
+  {mod:"onboarding",cat:"RULE",file:"onboarding.service.ts",fn:"REQUIRED_DOC_TYPES",lines:"62-67",
+   title:"4 mandatory KYC documents",
+   desc:"All four must be uploaded before KYC review can begin.",
+   formula:"{cert_incorporation, tax_registration, director_id, signed_agreement}"},
+
+  // ===== COLLATERAL =====
+  {mod:"collateral",cat:"MATH",file:"collateral.service.ts",fn:"checkCoverageRatio",lines:"288-300",
+   title:"Coverage ratio",
+   desc:"Total collateral relative to invoice face value.",
+   formula:"ratio = totalCollateralValue / faceValue"},
+  {mod:"collateral",cat:"RULE",file:"collateral CLAUDE.md",fn:"checkCoverageRatio",lines:"—",
+   title:"Coverage thresholds",
+   desc:"Different minimum ratios depending on collateral instrument.",
+   formula:"post-dated cheques: ratio ≥ 1.00\nall others: ratio ≥ 0.50"},
+  {mod:"collateral",cat:"RULE",file:"collateral.service.ts",fn:"deleteCollateral",lines:"242-248",
+   title:"No deletion after funding",
+   desc:"Once an invoice is funded, its collateral is locked.",
+   formula:"if invoice.status === 'funded' → reject"},
+
+  // ===== AUTH =====
+  {mod:"auth",cat:"RULE",file:"auth.service.ts",fn:"<constants>",lines:"30-31",
+   title:"Account lockout",
+   desc:"Brute-force protection.",
+   formula:"5 failed attempts → 30-minute lockout"},
+  {mod:"auth",cat:"RULE",file:"auth.service.ts",fn:"<constants>",lines:"27-29",
+   title:"Token lifetimes",
+   desc:"Access, refresh, and partial-auth (2FA pending) token TTLs.",
+   formula:"JWT 15m  ·  Refresh 7d  ·  Partial-auth 5m"},
+  {mod:"auth",cat:"RULE",file:"auth.service.ts",fn:"<constants>",lines:"32",
+   title:"Session lifetime",
+   desc:"Server-side session TTL.",
+   formula:"SESSION_TTL = 7 days"},
+  {mod:"auth",cat:"RULE",file:"auth.service.ts",fn:"<constants>",lines:"268",
+   title:"Password history depth",
+   desc:"Prevents password reuse.",
+   formula:"cannot reuse last 5 passwords"},
+  {mod:"auth",cat:"RULE",file:"auth.service.ts",fn:"<constants>",lines:"818-819",
+   title:"Account inactivity",
+   desc:"Warn at 150 days, auto-disable at 180 days.",
+   formula:"warn 150d  ·  disable 180d"},
+  {mod:"auth",cat:"RULE",file:"auth.service.ts",fn:"detectBruteForceAttempt",lines:"499-500",
+   title:"Brute-force window",
+   desc:"Sliding window detection of repeated failures.",
+   formula:"if failures ≥ 5 in 15 min → security alert"}
+];
+
+const $ = id => document.getElementById(id);
+const main = $("main");
+const allMods = [...new Set(ITEMS.map(i=>i.mod))];
+const activeCats = new Set(["MATH","RULE"]);
+const activeMods = new Set(allMods);
+
+// build module toggles
+const modBox = $("mod-toggles");
+allMods.forEach(m=>{
+  const el = document.createElement("div");
+  el.className = "tog active";
+  el.dataset.mod = m;
+  el.textContent = m;
+  el.onclick = ()=>{
+    if(activeMods.has(m)){activeMods.delete(m);el.classList.remove("active")}
+    else{activeMods.add(m);el.classList.add("active")}
+    render();
+  };
+  modBox.appendChild(el);
+});
+
+// category toggles
+document.querySelectorAll("#cat-toggles .tog").forEach(el=>{
+  el.onclick = ()=>{
+    const c = el.dataset.cat;
+    if(activeCats.has(c)){activeCats.delete(c);el.classList.remove("active")}
+    else{activeCats.add(c);el.classList.add("active")}
+    render();
+  };
+});
+
+$("search").oninput = render;
+
+function render(){
+  const q = $("search").value.trim().toLowerCase();
+  const filtered = ITEMS.filter(i =>
+    activeCats.has(i.cat) &&
+    activeMods.has(i.mod) &&
+    (!q || (i.title+i.desc+i.formula+i.file+i.fn+i.mod).toLowerCase().includes(q))
+  );
+  const byMod = {};
+  filtered.forEach(i=>{ (byMod[i.mod] ||= []).push(i); });
+
+  main.innerHTML = "";
+  if(filtered.length === 0){
+    main.innerHTML = '<div class="empty">No matches. Try a different filter or search term.</div>';
+  } else {
+    Object.keys(byMod).sort().forEach(mod=>{
+      const sec = document.createElement("section");
+      sec.className = "module";
+      sec.innerHTML = `<h2>${mod} <span class="count">${byMod[mod].length}</span></h2>
+        <div class="grid">${byMod[mod].map(card).join("")}</div>`;
+      main.appendChild(sec);
+    });
+  }
+  $("stat-shown").textContent = filtered.length;
+}
+
+function card(i){
+  return `<div class="card ${i.cat}">
+    <div class="head">
+      <div class="title">${escape(i.title)}</div>
+      <div class="badge">${i.cat}</div>
+    </div>
+    <div class="desc">${escape(i.desc)}</div>
+    <div class="formula">${escape(i.formula)}</div>
+    <div class="meta">
+      <span>${escape(i.file)}</span>
+      <span>${escape(i.fn)}</span>
+      <span>L${escape(i.lines)}</span>
+    </div>
+  </div>`;
+}
+function escape(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+$("stat-math").textContent = ITEMS.filter(i=>i.cat==="MATH").length;
+$("stat-rule").textContent = ITEMS.filter(i=>i.cat==="RULE").length;
+$("stat-mod").textContent = allMods.length;
+render();
+</script>
+</body>
+</html>

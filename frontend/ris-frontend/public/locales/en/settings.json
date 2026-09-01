@@ -1,0 +1,35 @@
+{
+  "page": {
+    "profile_title": "Profile",
+    "password_title": "Change Password",
+    "notifications_title": "Notifications"
+  },
+  "profile": {
+    "section_title": "Your Information",
+    "role": "Role",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone"
+  },
+  "password": {
+    "section_title": "Update your password",
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm New Password"
+  },
+  "notifications": {
+    "section_title": "Notification Preferences",
+    "email": "Email",
+    "sms": "SMS",
+    "event": "Event"
+  },
+  "action": {
+    "save": "Save Changes",
+    "change_password": "Change Password",
+    "save_preferences": "Save Preferences"
+  },
+  "success": {
+    "profile_updated": "Profile updated",
+    "preferences_saved": "Preferences saved"
+  }
+}

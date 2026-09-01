@@ -1,0 +1,25 @@
+# Exclude host-built artefacts from the Docker build context so the image
+# is built reproducibly from source inside the builder stage.
+node_modules
+dist
+.vite
+.cache
+
+# Local env files -- never bake into the image
+.env
+.env.*
+!.env.example
+
+# Dev / test artefacts
+coverage
+.nyc_output
+e2e/test-results
+playwright-report
+*.log
+npm-debug.log*
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+{
+  "lastUpdated": "2026-03-28",
+  "format_notes": "Each entry maps to the SanctionsEntry interface: { name: string; registration_number?: string; reason: string }. When populating from a real feed, map Uganda FIA Designated Persons list (https://www.fia.go.ug) and UN Consolidated Sanctions List (https://scsanctions.un.org) fields as follows — UN: 'FIRST_NAME'+'SECOND_NAME'+'THIRD_NAME' → name; 'ENTITY_ID' or 'INDIVIDUAL_ID' → registration_number (omit if not applicable); 'COMMENTS1' or listing resolution → reason. FIA Uganda: 'entity_name' → name; 'registration_number' → registration_number (if corporate); 'listing_basis' → reason. Refresh this file at least monthly and on every regulatory update. Never commit real PII of listed individuals; use only the legally published designation name.",
+  "entries": [
+    {
+      "name": "Fictitious Trading Company Ltd",
+      "registration_number": "UG-TEST-001",
+      "reason": "Test entry — fictitious entity used for sanctions screening validation"
+    },
+    {
+      "name": "Phantom Supplies Uganda",
+      "registration_number": "UG-TEST-002",
+      "reason": "Test entry — fictitious entity used for sanctions screening validation"
+    },
+    {
+      "name": "Shadow Exports International",
+      "registration_number": "UG-TEST-003",
+      "reason": "Test entry — fictitious entity used for sanctions screening validation"
+    },
+    {
+      "name": "Ghost Commodities Ltd",
+      "reason": "Test entry — fictitious entity with no registration number, matched by name only"
+    },
+    {
+      "name": "Mirage Finance Solutions",
+      "registration_number": "UG-TEST-005",
+      "reason": "Test entry — fictitious entity used for sanctions screening validation"
+    }
+  ]
+}

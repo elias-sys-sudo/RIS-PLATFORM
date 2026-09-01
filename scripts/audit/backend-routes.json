@@ -1,0 +1,782 @@
+[
+  {
+    "method": "POST",
+    "path": "/auth/login",
+    "auth": "rate_limited",
+    "roles": [],
+    "requestBody": ["email", "password"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/auth/2fa/verify",
+    "auth": "none",
+    "roles": [],
+    "requestBody": ["partialAuthToken", "code"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/auth/forgot-password",
+    "auth": "rate_limited",
+    "roles": [],
+    "requestBody": ["email"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/auth/reset-password",
+    "auth": "none",
+    "roles": [],
+    "requestBody": ["token", "new_password"],
+    "queryParams": []
+  },
+  {
+    "method": "PUT",
+    "path": "/auth/change-password",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": ["current_password", "new_password", "confirm_password"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/auth/change-password",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": ["current_password", "new_password", "confirm_password"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/auth/logout",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/auth/refresh",
+    "auth": "cookie",
+    "roles": [],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/auth/suppliers/:supplier_id/buyers",
+    "auth": "jwt",
+    "roles": ["supplier", "credit_officer", "finance_manager", "management", "legal"],
+    "requestBody": [],
+    "queryParams": ["page", "limit", "search", "status"]
+  },
+  {
+    "method": "POST",
+    "path": "/onboarding/suppliers/register",
+    "auth": "none",
+    "roles": [],
+    "requestBody": [
+      "email", "password", "company_name", "registration_number",
+      "tax_id", "directors", "bank_details", "payment_method"
+    ],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/onboarding/suppliers/:id",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/onboarding/suppliers/:id/documents",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": ["document_type"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/onboarding/suppliers/:id/documents",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "PUT",
+    "path": "/onboarding/admin/suppliers/:id/kyc-status",
+    "auth": "jwt",
+    "roles": ["credit_officer", "compliance_officer"],
+    "requestBody": ["status", "comments"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/onboarding/admin/suppliers",
+    "auth": "jwt",
+    "roles": ["credit_officer", "compliance_officer", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/onboarding/admin/buyers",
+    "auth": "jwt",
+    "roles": ["credit_officer"],
+    "requestBody": [
+      "company_name", "registration_number", "credit_rating",
+      "approved_limit", "payment_score", "contact_email",
+      "contact_phone", "mms_margin_rate"
+    ],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/onboarding/admin/buyers",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/onboarding/admin/buyers/:id",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "PUT",
+    "path": "/onboarding/admin/buyers/:id",
+    "auth": "jwt",
+    "roles": ["credit_officer"],
+    "requestBody": [
+      "company_name", "registration_number", "credit_rating",
+      "approved_limit", "payment_score", "contact_email",
+      "contact_phone", "mms_margin_rate"
+    ],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/invoices/:id/approve",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management"],
+    "requestBody": ["comments"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/invoices/:id/reject",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management"],
+    "requestBody": ["comments", "reason"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/invoices/queue",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/invoices/:id/risk-score",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/invoices/:id/pricing",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/invoices/submit",
+    "auth": "jwt",
+    "roles": ["supplier"],
+    "requestBody": ["invoice_number", "buyer_id", "face_value", "due_date", "description"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/invoices",
+    "auth": "jwt",
+    "roles": ["supplier", "credit_officer", "management", "compliance_officer", "legal"],
+    "requestBody": [],
+    "queryParams": ["page", "limit", "status", "buyer_id", "date_from", "date_to"]
+  },
+  {
+    "method": "GET",
+    "path": "/invoices/:id",
+    "auth": "jwt",
+    "roles": ["supplier", "credit_officer", "management", "compliance_officer", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/invoices/:id/timeline",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "compliance_officer", "auditor"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/invoices/:invoiceId/collateral",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/invoices/:invoiceId/collateral",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": ["type", "description", "estimated_value", "expiry_date"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/verify/:token",
+    "auth": "none",
+    "roles": [],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/verify/:token/confirm",
+    "auth": "rate_limited",
+    "roles": [],
+    "requestBody": [
+      "invoice_is_valid", "amount_is_correct",
+      "due_date_is_correct", "agrees_to_pay_mms"
+    ],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/verify/admin/invoices/:id/resend-confirmation",
+    "auth": "jwt",
+    "roles": ["credit_officer"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/verify/admin/invoices/pending-confirmation",
+    "auth": "jwt",
+    "roles": ["credit_officer"],
+    "requestBody": [],
+    "queryParams": ["page", "limit"]
+  },
+  {
+    "method": "GET",
+    "path": "/approvals",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "compliance_officer", "legal"],
+    "requestBody": [],
+    "queryParams": ["tab", "tier", "search", "page", "page_size", "sort_by", "sort_dir"]
+  },
+  {
+    "method": "GET",
+    "path": "/approvals/history",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "compliance_officer", "legal"],
+    "requestBody": [],
+    "queryParams": ["page", "page_size"]
+  },
+  {
+    "method": "GET",
+    "path": "/approvals/:invoiceId",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "compliance_officer", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/approvals/:invoiceId/approve",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management"],
+    "requestBody": ["reason"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/approvals/:invoiceId/reject",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management"],
+    "requestBody": ["reason"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/approvals/:invoiceId/request-info",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management"],
+    "requestBody": ["message"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/payments/history",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": ["supplier_id", "from", "to", "method", "min_amount", "sort", "order", "page", "limit"]
+  },
+  {
+    "method": "POST",
+    "path": "/payments/:id/authorise",
+    "auth": "jwt",
+    "roles": ["finance_manager"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/payments/webhook/mtn",
+    "auth": "none",
+    "roles": [],
+    "requestBody": ["externalId", "status", "financialTransactionId", "reason"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/payments/webhook/airtel",
+    "auth": "none",
+    "roles": [],
+    "requestBody": ["transaction"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/payments/pending",
+    "auth": "jwt",
+    "roles": ["finance_manager", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/payments/:id",
+    "auth": "jwt",
+    "roles": ["finance_manager", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/collections",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management", "legal"],
+    "requestBody": [],
+    "queryParams": [
+      "status", "escalation_level", "days_overdue_min", "days_overdue_max",
+      "search", "sort_by", "sort_dir", "page", "page_size"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/collections/overdue",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/collections/:invoiceId/penalty",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/collections/:id",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management", "legal"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/collections/:id/payments",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager"],
+    "requestBody": ["amount", "method", "reference", "paid_by", "payment_date", "notes"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/collections/:id/escalate",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management"],
+    "requestBody": ["reason"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/collections/:id/de-escalate",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management"],
+    "requestBody": ["reason"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/collections/:id/resolve",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/collections/:id/record-payment",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager"],
+    "requestBody": ["amount", "paymentDate", "paymentMethod", "paidBy", "paymentReference", "notes"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/facilities",
+    "auth": "jwt",
+    "roles": ["finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/facilities/dashboard",
+    "auth": "jwt",
+    "roles": ["finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/facilities/:id/drawdown",
+    "auth": "jwt",
+    "roles": ["finance_manager"],
+    "requestBody": ["invoiceId", "principal", "bankFees", "invoiceDueDate"],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/facilities/:id/repay",
+    "auth": "jwt",
+    "roles": ["finance_manager"],
+    "requestBody": ["drawdownId"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/reports/portfolio",
+    "auth": "jwt",
+    "roles": ["management", "auditor", "legal"],
+    "requestBody": [],
+    "queryParams": ["startDate", "endDate", "buyerId", "status"]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/aging",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management", "auditor", "legal"],
+    "requestBody": [],
+    "queryParams": ["startDate", "endDate", "buyerId", "status"]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/buyer-exposure",
+    "auth": "jwt",
+    "roles": ["credit_officer", "management"],
+    "requestBody": [],
+    "queryParams": ["startDate", "endDate", "buyerId", "status"]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/profit",
+    "auth": "jwt",
+    "roles": ["finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": ["startDate", "endDate", "buyerId", "status"]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/facilities",
+    "auth": "jwt",
+    "roles": ["finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": ["startDate", "endDate", "buyerId", "status"]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/audit-export",
+    "auth": "jwt",
+    "roles": ["auditor", "legal"],
+    "requestBody": [],
+    "queryParams": ["startDate", "endDate", "userId", "actionType", "format"]
+  },
+  {
+    "method": "GET",
+    "path": "/reports/regulatory",
+    "auth": "jwt",
+    "roles": ["compliance_officer", "management", "legal"],
+    "requestBody": [],
+    "queryParams": ["startDate", "endDate", "buyerId", "status"]
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard/summary",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": ["period"]
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard/payments",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": ["status", "method", "direction", "from", "to", "page", "limit"]
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard/approval-queue",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard/funding-pipeline",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard/supplier/summary",
+    "auth": "jwt",
+    "roles": ["supplier"],
+    "requestBody": [],
+    "queryParams": ["period"]
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard/legal/summary",
+    "auth": "jwt",
+    "roles": ["legal", "compliance_officer", "management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard/risk-distribution",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": ["period"]
+  },
+  {
+    "method": "GET",
+    "path": "/documents/:document_id/download",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "POST",
+    "path": "/collateral",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": ["invoice_id", "type", "description", "estimated_value", "currency", "documents", "expiry_date"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/collateral",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": ["invoice_id", "page", "limit"]
+  },
+  {
+    "method": "GET",
+    "path": "/collateral/:id",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "PUT",
+    "path": "/collateral/:id",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": ["invoice_id", "type", "description", "estimated_value", "currency", "documents", "expiry_date"],
+    "queryParams": []
+  },
+  {
+    "method": "PATCH",
+    "path": "/collateral/:id",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": ["invoice_id", "type", "description", "estimated_value", "currency", "documents", "expiry_date"],
+    "queryParams": []
+  },
+  {
+    "method": "DELETE",
+    "path": "/collateral/:id",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/settings/profile",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "PUT",
+    "path": "/settings/profile",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": ["name", "email", "phone"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/settings/notifications",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "PUT",
+    "path": "/settings/notifications",
+    "auth": "jwt",
+    "roles": ["any_authenticated"],
+    "requestBody": [
+      "email_invoices", "email_payments", "email_approvals",
+      "sms_payments", "sms_approvals"
+    ],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/buyers",
+    "auth": "jwt",
+    "roles": ["supplier", "credit_officer", "finance_manager", "management"],
+    "requestBody": [],
+    "queryParams": ["search", "page", "page_size"]
+  },
+  {
+    "method": "GET",
+    "path": "/suppliers",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management", "compliance_officer"],
+    "requestBody": [],
+    "queryParams": ["search", "status", "page", "page_size"]
+  },
+  {
+    "method": "GET",
+    "path": "/suppliers/:id",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management", "compliance_officer", "supplier"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/suppliers/:id/buyers",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management", "compliance_officer", "supplier"],
+    "requestBody": [],
+    "queryParams": ["page", "limit", "search", "status"]
+  },
+  {
+    "method": "GET",
+    "path": "/suppliers/:id/payments",
+    "auth": "jwt",
+    "roles": ["credit_officer", "finance_manager", "management", "compliance_officer", "supplier"],
+    "requestBody": [],
+    "queryParams": ["page", "page_size"]
+  },
+  {
+    "method": "GET",
+    "path": "/admin/users",
+    "auth": "jwt",
+    "roles": ["management"],
+    "requestBody": [],
+    "queryParams": ["search", "page", "page_size"]
+  },
+  {
+    "method": "POST",
+    "path": "/admin/users",
+    "auth": "jwt",
+    "roles": ["management"],
+    "requestBody": ["name", "email", "role"],
+    "queryParams": []
+  },
+  {
+    "method": "PATCH",
+    "path": "/admin/users/:userId",
+    "auth": "jwt",
+    "roles": ["management"],
+    "requestBody": ["role", "status"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/admin/risk-config",
+    "auth": "jwt",
+    "roles": ["management"],
+    "requestBody": [],
+    "queryParams": []
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/risk-config/:key",
+    "auth": "jwt",
+    "roles": ["management"],
+    "requestBody": ["value"],
+    "queryParams": []
+  },
+  {
+    "method": "GET",
+    "path": "/health",
+    "auth": "none",
+    "roles": [],
+    "requestBody": [],
+    "queryParams": []
+  }
+]

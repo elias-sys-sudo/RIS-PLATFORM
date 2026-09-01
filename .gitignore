@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+coverage/
+coverage-all/
+coverage-integration/
+.nyc_output/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+.claude/
+SKILL.md
+logs/
+~$*
+
+# IDE / agent caches — not part of the product
+.agents/
+.trae/
+.windsurf/
+.vscode/
+skills-lock.json
+.gstack/

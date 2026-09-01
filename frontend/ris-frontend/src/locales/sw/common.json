@@ -1,0 +1,49 @@
+{
+  "app": {
+    "name": "RIS Platform",
+    "tagline": "Punguzo la Ankara na Malipo ya Mapema"
+  },
+  "nav": {
+    "dashboard": "Dashibodi",
+    "invoices": "Ankara",
+    "approvals": "Idhini",
+    "payments": "Malipo",
+    "collections": "Makusanyo",
+    "suppliers": "Wasambazaji",
+    "buyers": "Wanunuzi",
+    "facilities": "Vifaa vya Benki",
+    "reporting": "Ripoti",
+    "settings": "Mipangilio",
+    "users": "Watumiaji",
+    "risk_config": "Usanidi wa Hatari"
+  },
+  "auth": {
+    "sign_in": "Ingia",
+    "sign_out": "Toka",
+    "email": "Barua pepe",
+    "password": "Nenosiri"
+  },
+  "actions": {
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "confirm": "Thibitisha",
+    "delete": "Futa",
+    "edit": "Hariri",
+    "create": "Unda",
+    "export": "Hamisha",
+    "refresh": "Onyesha upya",
+    "next": "Ifuatayo",
+    "back": "Nyuma",
+    "submit": "Wasilisha",
+    "approve": "Idhinisha",
+    "reject": "Kataa",
+    "search": "Tafuta"
+  },
+  "status": {
+    "loading": "Inapakia...",
+    "no_results": "Hakuna matokeo yaliyopatikana.",
+    "error": "Kitu fulani kimeenda vibaya.",
+    "offline": "Huna mtandao — unaona data iliyohifadhiwa",
+    "back_online": "Umerudi mtandaoni"
+  }
+}

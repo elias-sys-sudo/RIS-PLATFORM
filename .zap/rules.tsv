@@ -1,0 +1,112 @@
+# ZAP Baseline Scan Rules for MMS Platform
+# Format: rule-id<TAB>IGNORE|WARN|FAIL<TAB>description
+# HIGH findings always FAIL unless explicitly suppressed here.
+# WARN rules do not fail the build (workflow uses cmd_options: '-I').
+# IGNORE rules are not reported at all.
+# Only suppress alerts that have been reviewed and accepted for this API context.
+
+# ── Header findings (REST/JSON API — browser-centric headers N/A) ─────────────
+
+# 10015 - Incomplete or No Cache-control Header Set
+# API responses are not cached by browsers; this header is irrelevant for JSON APIs.
+10015	WARN	Incomplete or No Cache-control Header Set
+
+# 10049 - Storable and Cacheable Content
+# ZAP flags 404 responses on /, /robots.txt, /sitemap.xml as cacheable.
+# These paths return intentional 404s — the API has no root document to serve.
+10049	WARN	Storable and Cacheable Content
+
+# 10016 - Web Browser XSS Protection Not Enabled
+# Helmet intentionally sets X-XSS-Protection: 0 (modern browser guidance).
+10016	WARN	Web Browser XSS Protection Not Enabled
+
+# 10020 - Missing Anti-clickjacking Header
+# Helmet sets both X-Frame-Options: DENY and CSP frame-ancestors: none.
+# ZAP may still flag if it evaluates only one of these mechanisms.
+10020	WARN	Missing Anti-clickjacking Header
+
+# 10021 - X-Content-Type-Options Header Missing
+# Helmet sets noSniff: true on all responses.
+10021	WARN	X-Content-Type-Options Header Missing
+
+# 10035 - Strict-Transport-Security Header Not Set
+# HSTS is set by Helmet (maxAge 1yr, includeSubDomains, preload).
+# ZAP flags it on HTTP test environments since HSTS is technically HTTPS-only.
+10035	WARN	Strict-Transport-Security Header Not Set
+
+# 10036 - Server Leaks Version Information via "Server" HTTP Response Header
+# Helmet removes/obscures this; may still appear from Node.js/Express defaults.
+10036	WARN	Server Leaks Version Information
+
+# 10055 - Content Security Policy (CSP) Scanner
+# Helmet sets a strict CSP. ZAP may warn on 'unsafe-inline' in styleSrc,
+# which is an accepted tradeoff for API responses (no browser rendering).
+10055	WARN	CSP Scanner
+
+# 10063 - Permissions Policy Header Not Set
+# REST API — no browser features (camera, mic, geolocation) are used.
+# This header is only relevant for browser-rendered pages.
+10063	WARN	Permissions Policy Header Not Set
+
+# 10096 - Timestamp Disclosure
+# /health endpoint intentionally includes an ISO-8601 timestamp.
+# No epoch timestamps that could be used for timing attacks.
+10096	WARN	Timestamp Disclosure
+
+# 10109 - Modern Web Application
+# ZAP info-level finding for JSON APIs. Not a security issue.
+10109	IGNORE	Modern Web Application
+
+# 10110 - Dangerous JS Functions
+# False positives from minified Node.js dependencies in stack traces or error bodies.
+10110	IGNORE	Dangerous JS Functions
+
+# ── Cookie findings (test environment uses HTTP, not HTTPS) ──────────────────
+
+# 10011 - Cookie Without Secure Flag
+# Auth cookies (refresh tokens, session IDs) lack the Secure flag on HTTP test env.
+# Production runs behind TLS termination — Secure flag enforced at load balancer.
+10011	WARN	Cookie Without Secure Flag
+
+# 10054 - Cookie Without SameSite Attribute
+# Express session/auth cookies default to no SameSite. CORS policy restricts
+# cross-origin requests. Accepted for test environment.
+10054	WARN	Cookie Without SameSite Attribute
+
+# 90033 - Loosely Scoped Cookie
+# Test-env cookies may not have domain restrictions. Production uses strict domain.
+90033	WARN	Loosely Scoped Cookie
+
+# ── Information disclosure (intentional or non-sensitive) ────────────────────
+
+# 10027 - Information Disclosure - Suspicious Comments
+# Build artifacts may contain source-map comments. Not exploitable via API.
+10027	WARN	Information Disclosure - Suspicious Comments
+
+# 10094 - Base64 Disclosure
+# JWT tokens in Authorization headers and responses are Base64URL-encoded by design.
+10094	WARN	Base64 Disclosure
+
+# 10098 - Cross-Domain Misconfiguration
+# CORS is explicitly configured via CORS_ALLOWED_ORIGINS env var.
+# ZAP may flag permissive wildcard patterns during baseline spider phase.
+10098	WARN	Cross-Domain Misconfiguration
+
+# ── Alerts irrelevant for a JSON REST API ────────────────────────────────────
+
+# 90003 - Sub Resource Integrity Attribute Missing
+# API returns JSON — no external CSS/JS resources loaded via HTML.
+90003	IGNORE	Sub Resource Integrity Attribute Missing
+
+# 10108 - Reverse Tabnabbing
+# API returns JSON — no HTML with target="_blank" anchor tags.
+10108	IGNORE	Reverse Tabnabbing
+
+# 10017 - Cross-Domain JavaScript Source File Inclusion
+# API serves no HTML pages that include external JavaScript.
+10017	IGNORE	Cross-Domain JavaScript Source File Inclusion
+
+# 40040 - CORS Misconfiguration - Wildcard Origin
+# CORS origin validation is enforced via allowlist in createCorsMiddleware().
+# ZAP's spider requests (no Origin header) are permitted by design.
+40040	WARN	CORS Misconfiguration - Wildcard Origin

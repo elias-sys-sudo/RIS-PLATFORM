@@ -1,0 +1,1143 @@
+openapi: 3.0.3
+info:
+  title: RIS Invoice Discounting Platform API
+  version: 1.0.0
+  description: |
+    REST API for the RIS Invoice Discounting and Early Payment Platform, Uganda.
+    All endpoints require Bearer JWT authentication unless marked public.
+    Role-based access is enforced at route and service layer independently.
+  contact:
+    name: RIS Engineering
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.mms.co.ug/v1
+    description: Production
+  - url: https://staging-api.mms.co.ug/v1
+    description: Staging
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required: [error_code, message]
+      properties:
+        error_code:
+          type: string
+          example: CREDIT_LIMIT_EXCEEDED
+        message:
+          type: string
+          example: Invoice face value exceeds buyer credit limit
+        details:
+          type: object
+          description: Field-level error details for validation failures
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            details:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                face_value: Must be a positive integer
+                due_date: Must be between 7 and 90 days from today
+
+    MoneyAmount:
+      type: integer
+      format: int64
+      description: Raw UGX integer — no decimal places. UGX has no subunits.
+      example: 50000000
+
+    UUID:
+      type: string
+      format: uuid
+      example: 550e8400-e29b-41d4-a716-446655440000
+
+    Role:
+      type: string
+      enum: [supplier, credit_officer, finance_manager, management, compliance_officer, auditor]
+
+    InvoiceStatus:
+      type: string
+      enum:
+        [
+          draft,
+          submitted,
+          buyer_confirmed,
+          scored,
+          approved,
+          rejected,
+          pending_first_auth,
+          pending_second_auth,
+          executing,
+          funded,
+          collecting,
+          overdue,
+          collected,
+          defaulted,
+          cancelled,
+        ]
+
+    PaymentProvider:
+      type: string
+      enum: [MTN_MOMO, AIRTEL, EFT]
+
+    # ─── Auth Schemas ───────────────────────────────────────────────────────
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          minLength: 12
+          maxLength: 128
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT valid for 15 minutes
+        token_type:
+          type: string
+          example: Bearer
+        requires_2fa:
+          type: boolean
+          description: True if 2FA verification required before full access
+        partial_auth_token:
+          type: string
+          description: Present only if requires_2fa=true
+
+    TwoFARequest:
+      type: object
+      required: [partial_auth_token, totp_code]
+      properties:
+        partial_auth_token:
+          type: string
+        totp_code:
+          type: string
+          pattern: '^\d{6}$'
+
+    # ─── Supplier Schemas ───────────────────────────────────────────────────
+
+    SupplierRegistration:
+      type: object
+      required:
+        [
+          company_name,
+          registration_number,
+          tax_id,
+          directors,
+          bank_name,
+          bank_account_number,
+          bank_account_name,
+          bank_branch,
+          preferred_payment_method,
+        ]
+      properties:
+        company_name:
+          type: string
+          minLength: 2
+          maxLength: 255
+        registration_number:
+          type: string
+          maxLength: 50
+        tax_id:
+          type: string
+          maxLength: 50
+        directors:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [name, id_type, id_number]
+            properties:
+              name:
+                type: string
+              id_type:
+                type: string
+                enum: [national_id, passport, driving_permit]
+              id_number:
+                type: string
+        bank_name:
+          type: string
+        bank_account_number:
+          type: string
+        bank_account_name:
+          type: string
+        bank_branch:
+          type: string
+        preferred_payment_method:
+          $ref: '#/components/schemas/PaymentProvider'
+        mobile_money_number:
+          type: string
+          pattern: '^256[0-9]{9}$'
+          description: Required if preferred_payment_method is MTN_MOMO or AIRTEL
+
+    SupplierResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        company_name:
+          type: string
+        registration_number:
+          type: string
+        kyc_status:
+          type: string
+          enum: [pending, documents_submitted, under_review, approved, rejected]
+        preferred_payment_method:
+          $ref: '#/components/schemas/PaymentProvider'
+        created_at:
+          type: string
+          format: date-time
+        sanctions_flag:
+          type: boolean
+
+    # ─── Invoice Schemas ────────────────────────────────────────────────────
+
+    InvoiceSubmission:
+      type: object
+      required: [invoice_number, buyer_id, face_value, due_date]
+      properties:
+        invoice_number:
+          type: string
+          maxLength: 100
+          description: Must be unique per supplier
+        buyer_id:
+          $ref: '#/components/schemas/UUID'
+        face_value:
+          $ref: '#/components/schemas/MoneyAmount'
+          description: Must be positive integer UGX
+        due_date:
+          type: string
+          format: date
+          description: Must be 7-90 days from today
+        description:
+          type: string
+          maxLength: 500
+
+    InvoiceResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        invoice_number:
+          type: string
+        buyer_id:
+          $ref: '#/components/schemas/UUID'
+        supplier_id:
+          $ref: '#/components/schemas/UUID'
+        face_value:
+          $ref: '#/components/schemas/MoneyAmount'
+        due_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/InvoiceStatus'
+        sla_deadline:
+          type: string
+          format: date-time
+        buyer_confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    BuyerConfirmRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          format: uuid
+          description: UUID v4 token from confirmation email
+
+    ApprovalRequest:
+      type: object
+      required: [comments]
+      properties:
+        comments:
+          type: string
+          minLength: 20
+          maxLength: 2000
+          description: Minimum 20 characters required
+
+    # ─── Risk Score Schema ──────────────────────────────────────────────────
+
+    RiskScoreResponse:
+      type: object
+      properties:
+        invoice_id:
+          $ref: '#/components/schemas/UUID'
+        buyer_credit_score:
+          type: number
+          example: 22.5
+        tenor_score:
+          type: number
+          example: 15.0
+        supplier_track_record:
+          type: number
+          example: 20.0
+        concentration_risk:
+          type: number
+          example: 11.25
+        collateral_score:
+          type: number
+          example: 9.0
+        final_score:
+          type: integer
+          example: 78
+        recommendation:
+          type: string
+          enum: [AUTO_APPROVE, REFER_TO_MANAGER, REJECT]
+        max_advance_pct:
+          type: number
+          example: 0.95
+        risk_premium:
+          type: number
+          example: 0.005
+        scored_at:
+          type: string
+          format: date-time
+
+    # ─── Payment Schema ─────────────────────────────────────────────────────
+
+    PaymentAuthoriseRequest:
+      type: object
+      properties:
+        confirmation:
+          type: boolean
+          enum: [true]
+          description: Must be explicitly true — prevents accidental authorisation
+
+    PaymentResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        invoice_id:
+          $ref: '#/components/schemas/UUID'
+        amount:
+          $ref: '#/components/schemas/MoneyAmount'
+        provider:
+          $ref: '#/components/schemas/PaymentProvider'
+        status:
+          type: string
+          enum: [pending_first_auth, pending_second_auth, executing, funded, failed]
+        dual_auth_user_1:
+          $ref: '#/components/schemas/UUID'
+          nullable: true
+        dual_auth_user_2:
+          $ref: '#/components/schemas/UUID'
+          nullable: true
+        transaction_reference:
+          type: string
+          nullable: true
+        funded_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ─── Report Schemas ─────────────────────────────────────────────────────
+
+    PortfolioSummary:
+      type: object
+      properties:
+        total_funded:
+          $ref: '#/components/schemas/MoneyAmount'
+        total_collected:
+          $ref: '#/components/schemas/MoneyAmount'
+        total_outstanding:
+          $ref: '#/components/schemas/MoneyAmount'
+        total_overdue:
+          $ref: '#/components/schemas/MoneyAmount'
+        annualised_yield_pct:
+          type: number
+        invoice_count_by_status:
+          type: object
+          additionalProperties:
+            type: integer
+        top_5_buyers:
+          type: array
+          items:
+            type: object
+            properties:
+              buyer_id:
+                $ref: '#/components/schemas/UUID'
+              company_name:
+                type: string
+              exposure:
+                $ref: '#/components/schemas/MoneyAmount'
+
+  # ─── Common Responses ───────────────────────────────────────────────────
+
+  responses:
+    Unauthorized:
+      description: Not authenticated or token expired
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error_code: UNAUTHORIZED
+            message: Authentication required
+
+    Forbidden:
+      description: Authenticated but insufficient role or accessing another user's resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error_code: FORBIDDEN
+            message: You do not have permission to access this resource
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ValidationFailed:
+      description: Request body failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    BusinessRuleViolation:
+      description: Business rule violated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until rate limit resets
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error_code: RATE_LIMIT_EXCEEDED
+            message: Too many requests. Please try again later.
+
+    InternalError:
+      description: Internal server error — no stack trace exposed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error_code: INTERNAL_ERROR
+            message: An unexpected error occurred. Please contact support.
+
+# ─── Paths ────────────────────────────────────────────────────────────────────
+
+paths:
+  # ─── Auth ──────────────────────────────────────────────────────────────────
+
+  /auth/login:
+    post:
+      summary: Authenticate user
+      tags: [Auth]
+      security: []
+      x-required-role: public
+      x-rate-limit: 10 per IP per 15 minutes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          description: Invalid credentials (never reveals whether email exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error_code: INVALID_CREDENTIALS
+                message: Invalid credentials
+        '403':
+          description: Account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error_code: ACCOUNT_LOCKED
+                message: Account temporarily locked until 2026-03-20T18:45:00Z
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/2fa/verify:
+    post:
+      summary: Verify TOTP 2FA code after successful password authentication
+      tags: [Auth]
+      security: []
+      x-required-role: partial_auth_token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TwoFARequest'
+      responses:
+        '200':
+          description: 2FA verified — full access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          description: Invalid or expired TOTP code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error_code: INVALID_TOTP
+                message: Invalid or expired verification code
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/logout:
+    post:
+      summary: Invalidate current session
+      tags: [Auth]
+      x-required-role: all authenticated
+      responses:
+        '204':
+          description: Session invalidated successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/refresh:
+    post:
+      summary: Exchange refresh token for new access token
+      tags: [Auth]
+      security: []
+      description: Refresh token sent via httpOnly cookie automatically
+      responses:
+        '200':
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Refresh token invalid or expired
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ─── Suppliers ─────────────────────────────────────────────────────────────
+
+  /suppliers/register:
+    post:
+      summary: Register new supplier
+      tags: [Suppliers]
+      security: []
+      x-required-role: public
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierRegistration'
+      responses:
+        '201':
+          description: Supplier registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '409':
+          description: Registration number or tax ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error_code: DUPLICATE_REGISTRATION
+                message: A supplier with this registration number already exists
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /suppliers/{id}:
+    get:
+      summary: Get supplier by ID
+      tags: [Suppliers]
+      x-required-role: supplier (own only), credit_officer, management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Supplier details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /suppliers/{id}/documents:
+    put:
+      summary: Upload KYC documents
+      tags: [Suppliers]
+      x-required-role: supplier (own only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [document_type, file]
+              properties:
+                document_type:
+                  type: string
+                  enum:
+                    [
+                      certificate_of_incorporation,
+                      tax_registration,
+                      director_id,
+                      signed_supplier_agreement,
+                    ]
+                file:
+                  type: string
+                  format: binary
+                  description: PDF, JPEG, or PNG. Maximum 10MB.
+      responses:
+        '200':
+          description: Document uploaded and encrypted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document_id:
+                    $ref: '#/components/schemas/UUID'
+                  document_type:
+                    type: string
+                  file_hash:
+                    type: string
+                    description: SHA-256 hash of original file content
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          description: File exceeds 10MB limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /admin/suppliers:
+    get:
+      summary: List all suppliers with filters
+      tags: [Admin]
+      x-required-role: credit_officer, compliance_officer, management
+      parameters:
+        - name: kyc_status
+          in: query
+          schema:
+            type: string
+            enum: [pending, documents_submitted, under_review, approved, rejected]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated list of suppliers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SupplierResponse'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ─── Invoices ──────────────────────────────────────────────────────────────
+
+  /invoices/submit:
+    post:
+      summary: Submit invoice for discounting
+      tags: [Invoices]
+      x-required-role: supplier (owns invoice)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceSubmission'
+      responses:
+        '201':
+          description: Invoice submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                supplier_not_approved:
+                  value:
+                    error_code: SUPPLIER_NOT_APPROVED
+                    message: Your KYC is pending approval. You cannot submit invoices yet.
+                duplicate_invoice:
+                  value:
+                    error_code: DUPLICATE_INVOICE
+                    message: An invoice with this number already exists for your account.
+                buyer_not_approved:
+                  value:
+                    error_code: BUYER_NOT_APPROVED
+                    message: This buyer is not registered or is inactive.
+                tenor_out_of_range:
+                  value:
+                    error_code: TENOR_OUT_OF_RANGE
+                    message: Invoice tenor is 95 days. Must be between 7 and 90 days.
+                    details:
+                      calculated_tenor_days: 95
+                credit_limit_exceeded:
+                  value:
+                    error_code: CREDIT_LIMIT_EXCEEDED
+                    message: Invoice exceeds buyer credit limit.
+                    details:
+                      remaining_availability: 15000000
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /invoices/{id}:
+    get:
+      summary: Get invoice by ID
+      tags: [Invoices]
+      x-required-role: supplier (own only), credit_officer, management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Invoice details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /invoices/{id}/buyer-confirm:
+    post:
+      summary: Buyer confirms invoice via token
+      tags: [Invoices]
+      security: []
+      x-required-role: public (token-based, no JWT)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuyerConfirmRequest'
+      responses:
+        '200':
+          description: Invoice confirmed by buyer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invoice confirmed successfully. Payment will be processed.
+        '401':
+          description: Token invalid, expired, or already used
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                expired:
+                  value:
+                    error_code: TOKEN_EXPIRED
+                    message: This confirmation link has expired. Please contact your supplier.
+                used:
+                  value:
+                    error_code: TOKEN_ALREADY_USED
+                    message: This invoice has already been confirmed.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /invoices/{id}/approve:
+    post:
+      summary: Credit officer approves invoice
+      tags: [Invoices]
+      x-required-role: credit_officer, management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalRequest'
+      responses:
+        '200':
+          description: Invoice approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Invoice locked by another officer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error_code: INVOICE_LOCKED
+                message: This invoice is currently being reviewed by another officer.
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /invoices/{id}/reject:
+    post:
+      summary: Credit officer rejects invoice
+      tags: [Invoices]
+      x-required-role: credit_officer, management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalRequest'
+            description: Comments explaining rejection reason are mandatory
+      responses:
+        '200':
+          description: Invoice rejected
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ─── Risk Scores ───────────────────────────────────────────────────────────
+
+  /invoices/{id}/risk-score:
+    get:
+      summary: Get risk score for invoice
+      tags: [Risk]
+      x-required-role: credit_officer, management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Risk score details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskScoreResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ─── Payments ──────────────────────────────────────────────────────────────
+
+  /payments/{id}/authorise:
+    post:
+      summary: Finance manager authorises payment (first or second)
+      tags: [Payments]
+      x-required-role: finance_manager ONLY
+      description: |
+        Records authorisation. If dual_auth_user_1 is null, records first authorisation.
+        If dual_auth_user_1 is set, records second authorisation (must be different user).
+        Triggers payment execution when both authorisations recorded.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentAuthoriseRequest'
+      responses:
+        '200':
+          description: Authorisation recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Wrong role or same user attempting both authorisations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                wrong_role:
+                  value:
+                    error_code: FORBIDDEN
+                    message: Only Finance Managers can authorise payments.
+                same_user:
+                  value:
+                    error_code: SAME_USER_DUAL_AUTH
+                    message: The same user cannot provide both payment authorisations.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ─── Reports ───────────────────────────────────────────────────────────────
+
+  /reports/portfolio:
+    get:
+      summary: Portfolio summary report
+      tags: [Reports]
+      x-required-role: management, auditor
+      parameters:
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Portfolio summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ─── Audit ─────────────────────────────────────────────────────────────────
+
+  /admin/audit-log:
+    get:
+      summary: Export audit trail — auditor only
+      tags: [Admin]
+      x-required-role: auditor ONLY
+      description: |
+        Returns CSV of audit_log entries. Queries use read-only database role.
+        Large exports generated asynchronously and delivered by email.
+      parameters:
+        - name: from_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: user_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: action_type
+          in: query
+          schema:
+            type: string
+            example: PAYMENT_FUNDED
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+            default: csv
+      responses:
+        '200':
+          description: Audit log export
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Date range too large (maximum 1 year per request)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'

@@ -1,0 +1,71 @@
+#!/bin/bash
+# =============================================================================
+# RIS Platform — Pre-commit hook
+# Blocks commits that would leak secrets or fail CI.
+# Order: cheapest-to-fix gate first → cheapest-to-run gate last.
+# Install: git config core.hooksPath .githooks
+# =============================================================================
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${YELLOW}[pre-commit]${NC} Running checks..."
+
+# ─── Step 1: gitleaks — block committed secrets ─────────────────────────────
+# Runs first because a leaked secret requires rotation, not a re-run.
+# Scans only the staged content (faster than a full repo scan).
+echo -e "${YELLOW}[1/5]${NC} gitleaks (staged secret scan)..."
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks protect --staged --redact --no-banner --config .gitleaks.toml; then
+    echo -e "${RED}[BLOCKED]${NC} gitleaks detected potential secrets in staged content."
+    echo -e "${RED}If this is a real credential, ROTATE IT and remove from history before re-committing.${NC}"
+    echo -e "${YELLOW}If it is a false positive, add an entry to .gitleaks.toml allowlist with justification.${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}  ✓ gitleaks passed${NC}"
+else
+  echo -e "${YELLOW}  ! gitleaks not installed locally — CI will still gate this${NC}"
+  echo -e "${YELLOW}    Install: https://github.com/gitleaks/gitleaks#installation${NC}"
+fi
+
+# ─── Step 2: TypeScript strict check ─────────────────────────────────────────
+echo -e "${YELLOW}[2/5]${NC} TypeScript typecheck..."
+if ! npx tsc --noEmit 2>&1; then
+  echo -e "${RED}[BLOCKED]${NC} TypeScript errors found. Fix them before committing."
+  exit 1
+fi
+echo -e "${GREEN}  ✓ typecheck passed${NC}"
+
+# ─── Step 3: Prettier format check ──────────────────────────────────────────
+echo -e "${YELLOW}[3/5]${NC} Prettier format check..."
+if ! npx prettier --check "src/**/*.ts" "tests/**/*.ts" 2>&1; then
+  echo -e "${RED}[BLOCKED]${NC} Prettier formatting issues. Run: npx prettier --write \"src/**/*.ts\" \"tests/**/*.ts\""
+  exit 1
+fi
+echo -e "${GREEN}  ✓ prettier passed${NC}"
+
+# ─── Step 4: ESLint (errors only — warnings don't block) ────────────────────
+echo -e "${YELLOW}[4/5]${NC} ESLint (errors only)..."
+if ! npx eslint src --ext .ts --quiet 2>&1; then
+  echo -e "${RED}[BLOCKED]${NC} ESLint errors in src/. Fix them before committing."
+  exit 1
+fi
+if ! npx eslint tests --ext .ts --quiet 2>&1; then
+  echo -e "${RED}[BLOCKED]${NC} ESLint errors in tests/. Fix them before committing."
+  exit 1
+fi
+echo -e "${GREEN}  ✓ lint passed${NC}"
+
+# ─── Step 5: Unit tests ─────────────────────────────────────────────────────
+echo -e "${YELLOW}[5/5]${NC} Unit tests..."
+if ! npx jest --testPathPattern=tests/unit --bail --silent 2>&1 | tail -5; then
+  echo -e "${RED}[BLOCKED]${NC} Unit tests failed. Fix them before committing."
+  exit 1
+fi
+echo -e "${GREEN}  ✓ tests passed${NC}"
+
+echo -e "${GREEN}[pre-commit]${NC} All checks passed. Committing."

@@ -1,0 +1,63 @@
+{
+  "page": {
+    "management_title": "Management Dashboard",
+    "management_subtitle": "Executive portfolio overview",
+    "supplier_title": "My Dashboard",
+    "supplier_subtitle": "Your invoice funding overview",
+    "credit_officer_title": "Credit Officer Dashboard",
+    "credit_officer_subtitle": "Approval queue & portfolio risk",
+    "finance_title": "Finance Dashboard",
+    "finance_subtitle": "Funding pipeline & payment SLAs",
+    "compliance_title": "Compliance Dashboard",
+    "compliance_subtitle": "AML monitoring & regulatory compliance",
+    "auditor_title": "Auditor Dashboard",
+    "auditor_subtitle": "Portfolio overview & audit access",
+    "overview_subtitle": "Overview of your invoice discounting portfolio"
+  },
+  "card": {
+    "total_invoices": "Total Invoices",
+    "total_face_value": "Total Face Value",
+    "total_funded": "Total Funded",
+    "collection_rate": "Collection Rate",
+    "overdue": "Overdue",
+    "overdue_amount": "Overdue Amount",
+    "avg_tenor": "Avg Tenor",
+    "active_facilities": "Active Facilities",
+    "pending_approvals": "Pending Approvals",
+    "submitted": "Submitted",
+    "funded": "Funded",
+    "outstanding": "Outstanding",
+    "avg_payment": "Avg Payment",
+    "sar_flagged": "SAR Flagged",
+    "sar_total": "SAR Total Amount",
+    "sar_items": "SAR Items",
+    "tier3_escalations": "Tier-3 Escalations"
+  },
+  "chart": {
+    "trend_title": "Funding & Collection Trend",
+    "status_title": "Invoice Status",
+    "risk_title": "Risk Distribution"
+  },
+  "section": {
+    "recent_activity": "Recent Activity",
+    "approval_queue": "Approval Queue",
+    "funding_pipeline": "Funding Pipeline",
+    "recent_payments": "Recent Payments",
+    "sar_invoices": "SAR-Flagged Invoices",
+    "tier3_legal": "Tier-3 Legal Escalations"
+  },
+  "activity": {
+    "invoice_submitted": "Invoice submitted",
+    "invoice_funded": "Invoice funded",
+    "payment_made": "Payment made",
+    "collection_received": "Collection received",
+    "escalation_raised": "Escalation raised",
+    "approval_completed": "Approval completed",
+    "invoice_overdue": "Invoice overdue",
+    "facility_drawdown": "Facility drawdown"
+  },
+  "trend": {
+    "vs_previous": "vs previous period",
+    "vs_prev": "vs prev"
+  }
+}

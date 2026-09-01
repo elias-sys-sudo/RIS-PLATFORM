@@ -1,0 +1,37 @@
+{
+  "page": {
+    "title": "Reporting",
+    "subtitle": "Select a report to view"
+  },
+  "report": {
+    "portfolio": { "title": "Portfolio Overview", "description": "Funded, collected, outstanding, overdue totals with status breakdown" },
+    "aging": { "title": "Aging Analysis", "description": "Receivables aging by bucket (0-30, 31-60, 61-90, 90+ days)" },
+    "buyer_exposure": { "title": "Buyer Exposure", "description": "Credit utilisation, payment performance per buyer" },
+    "profit": { "title": "Profit & Loss", "description": "Discount income, bank interest costs, net profit margins" },
+    "facilities": { "title": "Facilities Usage", "description": "Bank credit line utilisation and upcoming maturities" },
+    "audit_export": { "title": "Audit Export", "description": "Full audit trail export in CSV or JSON format" },
+    "regulatory": { "title": "Regulatory Compliance", "description": "AML flags, SARs filed, KYC statistics" }
+  },
+  "field": {
+    "total_funded": "Total Funded",
+    "total_collected": "Total Collected",
+    "outstanding": "Outstanding",
+    "overdue": "Overdue",
+    "annualised_yield": "Annualised Yield",
+    "net_profit": "Net Profit",
+    "avg_margin": "Avg Margin",
+    "aml_flags": "AML Flags",
+    "sars_filed": "SARs Filed",
+    "above_threshold": "Above Threshold",
+    "kyc_approved": "KYC Approved",
+    "kyc_rejected": "KYC Rejected"
+  },
+  "action": {
+    "export_csv": "Export CSV",
+    "view_report": "View Report"
+  },
+  "empty": {
+    "no_data": "No data available.",
+    "no_reports": "No reports available for your role."
+  }
+}

@@ -1,0 +1,801 @@
+[
+  {
+    "hookName": "fetchDashboardSummary",
+    "method": "GET",
+    "path": "/dashboard/summary",
+    "requestFields": [],
+    "responseType": "DashboardSummary",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchPaymentHistory",
+    "method": "GET",
+    "path": "/dashboard/payments",
+    "requestFields": [],
+    "responseType": "PaymentHistoryResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchApprovalQueue",
+    "method": "GET",
+    "path": "/dashboard/approval-queue",
+    "requestFields": [],
+    "responseType": "ApprovalQueueItem[]",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchFundingPipeline",
+    "method": "GET",
+    "path": "/dashboard/funding-pipeline",
+    "requestFields": [],
+    "responseType": "FundingPipelineItem[]",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchSupplierSummary",
+    "method": "GET",
+    "path": "/dashboard/supplier/summary",
+    "requestFields": [],
+    "responseType": "SupplierDashboardSummary",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchLegalSummary",
+    "method": "GET",
+    "path": "/dashboard/legal/summary",
+    "requestFields": [],
+    "responseType": "LegalDashboardSummary",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchRiskDistribution",
+    "method": "GET",
+    "path": "/dashboard/risk-distribution",
+    "requestFields": [],
+    "responseType": "RiskDistributionItem[]",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchInvoices",
+    "method": "GET",
+    "path": "/invoices",
+    "requestFields": [],
+    "responseType": "PaginatedInvoices",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchInvoice",
+    "method": "GET",
+    "path": "/invoices/:id",
+    "requestFields": [],
+    "responseType": "InvoiceDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "approveInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/approve",
+    "requestFields": ["reason"],
+    "responseType": "InvoiceDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "rejectInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/reject",
+    "requestFields": ["reason"],
+    "responseType": "InvoiceDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "requestInfo",
+    "method": "POST",
+    "path": "/invoices/:id/request-info",
+    "requestFields": ["message"],
+    "responseType": "InvoiceDetail",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/request-info — backend only has POST /approvals/:invoiceId/request-info"
+  },
+  {
+    "hookName": "fundInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/fund",
+    "requestFields": [],
+    "responseType": "InvoiceDetail",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/fund"
+  },
+  {
+    "hookName": "authoriseInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/authorise",
+    "requestFields": [],
+    "responseType": "InvoiceDetail",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/authorise — backend has POST /payments/:id/authorise"
+  },
+  {
+    "hookName": "overrideInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/override",
+    "requestFields": ["status", "reason"],
+    "responseType": "InvoiceDetail",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/override"
+  },
+  {
+    "hookName": "createInvoice",
+    "method": "POST",
+    "path": "/invoices",
+    "requestFields": [],
+    "responseType": "Invoice",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices — backend has POST /invoices/submit (fixed path, not generic create)"
+  },
+  {
+    "hookName": "updateInvoice",
+    "method": "PATCH",
+    "path": "/invoices/:id",
+    "requestFields": [],
+    "responseType": "Invoice",
+    "unmatched": true,
+    "unmatchedReason": "No backend route PATCH /invoices/:id"
+  },
+  {
+    "hookName": "deleteInvoice",
+    "method": "DELETE",
+    "path": "/invoices/:id",
+    "requestFields": [],
+    "responseType": "void",
+    "unmatched": true,
+    "unmatchedReason": "No backend route DELETE /invoices/:id"
+  },
+  {
+    "hookName": "submitInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/submit",
+    "requestFields": [],
+    "responseType": "Invoice",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/submit — backend has POST /invoices/submit (no :id param)"
+  },
+  {
+    "hookName": "uploadDocument",
+    "method": "POST",
+    "path": "/invoices/:invoiceId/documents",
+    "requestFields": ["doc_type", "file"],
+    "responseType": "UploadDocumentResponse",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:invoiceId/documents — document upload routes are under /onboarding/suppliers/:id/documents"
+  },
+  {
+    "hookName": "fetchBuyers",
+    "method": "GET",
+    "path": "/buyers",
+    "requestFields": [],
+    "responseType": "BuyerListResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchCollections",
+    "method": "GET",
+    "path": "/collections",
+    "requestFields": [],
+    "responseType": "PaginatedCollections",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchCollection",
+    "method": "GET",
+    "path": "/collections/:id",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "recordPayment",
+    "method": "POST",
+    "path": "/collections/:collectionId/payments",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "escalateCollection",
+    "method": "POST",
+    "path": "/collections/:collectionId/escalate",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "deescalateCollection",
+    "method": "POST",
+    "path": "/collections/:collectionId/de-escalate",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "resolveCollection",
+    "method": "POST",
+    "path": "/collections/:collectionId/resolve",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchApprovalQueue",
+    "method": "GET",
+    "path": "/approvals",
+    "requestFields": [],
+    "responseType": "PaginatedApprovals",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchApproval",
+    "method": "GET",
+    "path": "/approvals/:invoiceId",
+    "requestFields": [],
+    "responseType": "ApprovalDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "approveApproval",
+    "method": "POST",
+    "path": "/approvals/:invoiceId/approve",
+    "requestFields": ["reason"],
+    "responseType": "ApprovalDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "rejectApproval",
+    "method": "POST",
+    "path": "/approvals/:invoiceId/reject",
+    "requestFields": ["reason"],
+    "responseType": "ApprovalDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "requestInfoApproval",
+    "method": "POST",
+    "path": "/approvals/:invoiceId/request-info",
+    "requestFields": ["message"],
+    "responseType": "ApprovalDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchApprovalHistory",
+    "method": "GET",
+    "path": "/approvals/history",
+    "requestFields": [],
+    "responseType": "PaginatedApprovalHistory",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchCollateral",
+    "method": "GET",
+    "path": "/invoices/:invoiceId/collateral",
+    "requestFields": [],
+    "responseType": "CollateralItem[]",
+    "unmatched": false
+  },
+  {
+    "hookName": "createCollateral",
+    "method": "POST",
+    "path": "/invoices/:invoiceId/collateral",
+    "requestFields": [],
+    "responseType": "CollateralItem",
+    "unmatched": false
+  },
+  {
+    "hookName": "updateCollateral",
+    "method": "PATCH",
+    "path": "/collateral/:collateralId",
+    "requestFields": [],
+    "responseType": "CollateralItem",
+    "unmatched": false
+  },
+  {
+    "hookName": "deleteCollateral",
+    "method": "DELETE",
+    "path": "/collateral/:collateralId",
+    "requestFields": [],
+    "responseType": "void",
+    "unmatched": false
+  },
+  {
+    "hookName": "uploadCollateralDocument",
+    "method": "POST",
+    "path": "/collateral/:collateralId/documents",
+    "requestFields": ["file"],
+    "responseType": "CollateralDocument",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /collateral/:id/documents"
+  },
+  {
+    "hookName": "deleteCollateralDocument",
+    "method": "DELETE",
+    "path": "/collateral/:collateralId/documents/:documentId",
+    "requestFields": [],
+    "responseType": "void",
+    "unmatched": true,
+    "unmatchedReason": "No backend route DELETE /collateral/:id/documents/:documentId"
+  },
+  {
+    "hookName": "fetchCollateralAudit",
+    "method": "GET",
+    "path": "/collateral/:collateralId/audit",
+    "requestFields": [],
+    "responseType": "CollateralAuditEntry[]",
+    "unmatched": true,
+    "unmatchedReason": "No backend route GET /collateral/:id/audit"
+  },
+  {
+    "hookName": "fetchSuppliers",
+    "method": "GET",
+    "path": "/suppliers",
+    "requestFields": [],
+    "responseType": "PaginatedSuppliers",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchSupplier",
+    "method": "GET",
+    "path": "/suppliers/:id",
+    "requestFields": [],
+    "responseType": "SupplierDetailResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchSupplierBuyers",
+    "method": "GET",
+    "path": "/suppliers/:supplierId/buyers",
+    "requestFields": [],
+    "responseType": "PaginatedSupplierBuyers",
+    "unmatched": false
+  },
+  {
+    "hookName": "fetchSupplierPayments",
+    "method": "GET",
+    "path": "/suppliers/:supplierId/payments",
+    "requestFields": [],
+    "responseType": "PaginatedSupplierPayments",
+    "unmatched": false
+  },
+  {
+    "hookName": "getProfile",
+    "method": "GET",
+    "path": "/settings/profile",
+    "requestFields": [],
+    "responseType": "UserProfile",
+    "unmatched": false
+  },
+  {
+    "hookName": "updateProfile",
+    "method": "PUT",
+    "path": "/settings/profile",
+    "requestFields": [],
+    "responseType": "UserProfile",
+    "unmatched": false
+  },
+  {
+    "hookName": "getNotificationPreferences",
+    "method": "GET",
+    "path": "/settings/notifications",
+    "requestFields": [],
+    "responseType": "NotificationPreferences",
+    "unmatched": false
+  },
+  {
+    "hookName": "saveNotificationPreferences",
+    "method": "PUT",
+    "path": "/settings/notifications",
+    "requestFields": [],
+    "responseType": "void",
+    "unmatched": false
+  },
+  {
+    "hookName": "listUsers",
+    "method": "GET",
+    "path": "/admin/users",
+    "requestFields": [],
+    "responseType": "PaginatedAdminUsers",
+    "unmatched": false
+  },
+  {
+    "hookName": "createUser",
+    "method": "POST",
+    "path": "/admin/users",
+    "requestFields": [],
+    "responseType": "CreateUserResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "updateUser",
+    "method": "PATCH",
+    "path": "/admin/users/:userId",
+    "requestFields": [],
+    "responseType": "AdminUser",
+    "unmatched": false
+  },
+  {
+    "hookName": "listRiskConfig",
+    "method": "GET",
+    "path": "/admin/risk-config",
+    "requestFields": [],
+    "responseType": "RiskConfigEntry[]",
+    "unmatched": false
+  },
+  {
+    "hookName": "updateRiskConfig",
+    "method": "PUT",
+    "path": "/admin/risk-config/:key",
+    "requestFields": ["value"],
+    "responseType": "RiskConfigEntry",
+    "unmatched": false
+  },
+  {
+    "hookName": "useDashboardSummary",
+    "method": "GET",
+    "path": "/dashboard/summary",
+    "requestFields": [],
+    "responseType": "DashboardSummary",
+    "unmatched": false
+  },
+  {
+    "hookName": "usePaymentHistory",
+    "method": "GET",
+    "path": "/dashboard/payments",
+    "requestFields": [],
+    "responseType": "PaymentHistoryResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "useInvoices",
+    "method": "GET",
+    "path": "/invoices",
+    "requestFields": [],
+    "responseType": "unknown",
+    "unmatched": false
+  },
+  {
+    "hookName": "useInvoice",
+    "method": "GET",
+    "path": "/invoices/:id",
+    "requestFields": [],
+    "responseType": "InvoiceDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useCreateInvoice",
+    "method": "POST",
+    "path": "/invoices",
+    "requestFields": [],
+    "responseType": "Invoice",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices — backend has POST /invoices/submit (fixed path)"
+  },
+  {
+    "hookName": "useUpdateInvoice",
+    "method": "PATCH",
+    "path": "/invoices/:id",
+    "requestFields": [],
+    "responseType": "Invoice",
+    "unmatched": true,
+    "unmatchedReason": "No backend route PATCH /invoices/:id"
+  },
+  {
+    "hookName": "useDeleteInvoice",
+    "method": "DELETE",
+    "path": "/invoices/:id",
+    "requestFields": [],
+    "responseType": "void",
+    "unmatched": true,
+    "unmatchedReason": "No backend route DELETE /invoices/:id"
+  },
+  {
+    "hookName": "useSubmitInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/submit",
+    "requestFields": [],
+    "responseType": "Invoice",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/submit — backend has POST /invoices/submit (no :id param)"
+  },
+  {
+    "hookName": "useApproveInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/approve",
+    "requestFields": ["reason"],
+    "responseType": "InvoiceDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useRejectInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/reject",
+    "requestFields": ["reason"],
+    "responseType": "InvoiceDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useRequestInfo",
+    "method": "POST",
+    "path": "/invoices/:id/request-info",
+    "requestFields": ["message"],
+    "responseType": "InvoiceDetail",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/request-info — backend only has POST /approvals/:invoiceId/request-info"
+  },
+  {
+    "hookName": "useFundInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/fund",
+    "requestFields": [],
+    "responseType": "InvoiceDetail",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/fund"
+  },
+  {
+    "hookName": "useAuthoriseInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/authorise",
+    "requestFields": [],
+    "responseType": "InvoiceDetail",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/authorise — backend has POST /payments/:id/authorise"
+  },
+  {
+    "hookName": "useOverrideInvoice",
+    "method": "POST",
+    "path": "/invoices/:id/override",
+    "requestFields": ["status", "reason"],
+    "responseType": "InvoiceDetail",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /invoices/:id/override"
+  },
+  {
+    "hookName": "useBuyers",
+    "method": "GET",
+    "path": "/buyers",
+    "requestFields": [],
+    "responseType": "BuyerListResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "useCollections",
+    "method": "GET",
+    "path": "/collections",
+    "requestFields": [],
+    "responseType": "PaginatedCollections",
+    "unmatched": false
+  },
+  {
+    "hookName": "useCollection",
+    "method": "GET",
+    "path": "/collections/:id",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useRecordPayment",
+    "method": "POST",
+    "path": "/collections/:collectionId/payments",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useEscalateCollection",
+    "method": "POST",
+    "path": "/collections/:collectionId/escalate",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useDeescalateCollection",
+    "method": "POST",
+    "path": "/collections/:collectionId/de-escalate",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useResolveCollection",
+    "method": "POST",
+    "path": "/collections/:collectionId/resolve",
+    "requestFields": [],
+    "responseType": "CollectionDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useApprovalQueue",
+    "method": "GET",
+    "path": "/approvals",
+    "requestFields": [],
+    "responseType": "PaginatedApprovals",
+    "unmatched": false
+  },
+  {
+    "hookName": "useApproval",
+    "method": "GET",
+    "path": "/approvals/:invoiceId",
+    "requestFields": [],
+    "responseType": "ApprovalDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useApprovalHistory",
+    "method": "GET",
+    "path": "/approvals/history",
+    "requestFields": [],
+    "responseType": "PaginatedApprovalHistory",
+    "unmatched": false
+  },
+  {
+    "hookName": "useApprove",
+    "method": "POST",
+    "path": "/approvals/:invoiceId/approve",
+    "requestFields": ["reason"],
+    "responseType": "ApprovalDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useReject",
+    "method": "POST",
+    "path": "/approvals/:invoiceId/reject",
+    "requestFields": ["reason"],
+    "responseType": "ApprovalDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useRequestInfo",
+    "method": "POST",
+    "path": "/approvals/:invoiceId/request-info",
+    "requestFields": ["message"],
+    "responseType": "ApprovalDetail",
+    "unmatched": false
+  },
+  {
+    "hookName": "useCollateral",
+    "method": "GET",
+    "path": "/invoices/:invoiceId/collateral",
+    "requestFields": [],
+    "responseType": "CollateralItem[]",
+    "unmatched": false
+  },
+  {
+    "hookName": "useCollateralAudit",
+    "method": "GET",
+    "path": "/collateral/:collateralId/audit",
+    "requestFields": [],
+    "responseType": "CollateralAuditEntry[]",
+    "unmatched": true,
+    "unmatchedReason": "No backend route GET /collateral/:id/audit"
+  },
+  {
+    "hookName": "useCreateCollateral",
+    "method": "POST",
+    "path": "/invoices/:invoiceId/collateral",
+    "requestFields": [],
+    "responseType": "CollateralItem",
+    "unmatched": false
+  },
+  {
+    "hookName": "useUpdateCollateral",
+    "method": "PATCH",
+    "path": "/collateral/:collateralId",
+    "requestFields": [],
+    "responseType": "CollateralItem",
+    "unmatched": false
+  },
+  {
+    "hookName": "useDeleteCollateral",
+    "method": "DELETE",
+    "path": "/collateral/:collateralId",
+    "requestFields": [],
+    "responseType": "void",
+    "unmatched": false
+  },
+  {
+    "hookName": "useUploadCollateralDocument",
+    "method": "POST",
+    "path": "/collateral/:collateralId/documents",
+    "requestFields": ["file"],
+    "responseType": "CollateralDocument",
+    "unmatched": true,
+    "unmatchedReason": "No backend route POST /collateral/:id/documents"
+  },
+  {
+    "hookName": "useDeleteCollateralDocument",
+    "method": "DELETE",
+    "path": "/collateral/:collateralId/documents/:documentId",
+    "requestFields": [],
+    "responseType": "void",
+    "unmatched": true,
+    "unmatchedReason": "No backend route DELETE /collateral/:id/documents/:documentId"
+  },
+  {
+    "hookName": "useSuppliers",
+    "method": "GET",
+    "path": "/suppliers",
+    "requestFields": [],
+    "responseType": "PaginatedSuppliers",
+    "unmatched": false
+  },
+  {
+    "hookName": "useSupplier",
+    "method": "GET",
+    "path": "/suppliers/:id",
+    "requestFields": [],
+    "responseType": "SupplierDetailResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "useSupplierBuyers",
+    "method": "GET",
+    "path": "/suppliers/:supplierId/buyers",
+    "requestFields": [],
+    "responseType": "PaginatedSupplierBuyers",
+    "unmatched": false
+  },
+  {
+    "hookName": "useSupplierPayments",
+    "method": "GET",
+    "path": "/suppliers/:supplierId/payments",
+    "requestFields": [],
+    "responseType": "PaginatedSupplierPayments",
+    "unmatched": false
+  },
+  {
+    "hookName": "login",
+    "method": "POST",
+    "path": "/auth/login",
+    "requestFields": ["email", "password"],
+    "responseType": "LoginResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "logout",
+    "method": "POST",
+    "path": "/auth/logout",
+    "requestFields": [],
+    "responseType": "void",
+    "unmatched": false
+  },
+  {
+    "hookName": "refreshToken",
+    "method": "POST",
+    "path": "/auth/refresh",
+    "requestFields": ["refreshToken"],
+    "responseType": "RefreshResponse",
+    "unmatched": false
+  },
+  {
+    "hookName": "changePassword",
+    "method": "POST",
+    "path": "/auth/change-password",
+    "requestFields": ["currentPassword", "newPassword"],
+    "responseType": "void",
+    "unmatched": false
+  },
+  {
+    "hookName": "ForgotPasswordPage",
+    "method": "POST",
+    "path": "/auth/forgot-password",
+    "requestFields": ["email"],
+    "responseType": "unknown",
+    "unmatched": false
+  },
+  {
+    "hookName": "ResetPasswordPage",
+    "method": "POST",
+    "path": "/auth/reset-password",
+    "requestFields": ["token", "password"],
+    "responseType": "unknown",
+    "unmatched": false
+  }
+]

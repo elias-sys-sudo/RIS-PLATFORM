@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RIS Platform — Database Schema</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-hover: #253349;
+    --border: #334155;
+    --accent: #3b82f6;
+    --accent2: #8b5cf6;
+    --accent3: #06b6d4;
+    --accent4: #10b981;
+    --accent5: #f59e0b;
+    --accent6: #ef4444;
+    --accent7: #ec4899;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-bright: #f8fafc;
+    --pk: #fbbf24;
+    --fk: #60a5fa;
+    --encrypted: #f472b6;
+    --bigint: #34d399;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 2rem 2rem 1rem;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.25rem;
+  }
+  .header .sub { color: var(--text-dim); font-size: 0.9rem; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 2rem;
+    background: rgba(30,41,59,0.9);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 85px;
+    z-index: 99;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem 2rem;
+    flex-wrap: wrap;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat .val {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .stat .lbl {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Content */
+  .content {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 1rem 2rem 3rem;
+  }
+
+  /* Domain section */
+  .domain {
+    margin-bottom: 2.5rem;
+  }
+  .domain-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .domain-title .dt-icon { font-size: 1.3rem; }
+  .domain-title .dt-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 10px;
+    border-radius: 10px;
+  }
+
+  /* Table grid */
+  .table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1rem;
+  }
+
+  /* Table card */
+  .tbl {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .tbl:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px rgba(59,130,246,0.15);
+  }
+  .tbl-head {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .tbl-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-bright);
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+  .tbl-badges { display: flex; gap: 0.4rem; }
+  .tbl-badge {
+    font-size: 0.6rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .tbl-badge.rls { background: rgba(139,92,246,0.2); color: #a78bfa; }
+  .tbl-badge.immutable { background: rgba(239,68,68,0.2); color: #f87171; }
+  .tbl-badge.trigger { background: rgba(245,158,11,0.2); color: #fbbf24; }
+
+  /* Columns */
+  .tbl-cols {
+    padding: 0.25rem 0;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .tbl-cols::-webkit-scrollbar { width: 4px; }
+  .tbl-cols::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .col {
+    display: grid;
+    grid-template-columns: 20px 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 3px 1rem;
+    font-size: 0.78rem;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    transition: background 0.15s;
+  }
+  .col:hover { background: rgba(255,255,255,0.03); }
+  .col-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .col-icon.pk { background: var(--pk); color: #000; }
+  .col-icon.fk { background: var(--fk); color: #fff; }
+  .col-icon.enc { background: var(--encrypted); color: #fff; }
+  .col-icon.idx { background: rgba(255,255,255,0.1); color: var(--text-dim); }
+  .col-icon.reg { background: transparent; }
+  .col-name { color: var(--text); }
+  .col-name.nn::after { content: ' *'; color: var(--accent6); font-size: 0.65rem; }
+  .col-type { color: var(--text-dim); font-size: 0.7rem; text-align: right; }
+  .col-type.money { color: var(--bigint); }
+  .col-type.enc-type { color: var(--encrypted); }
+
+  /* Constraints */
+  .tbl-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .constraint { margin-bottom: 2px; }
+  .constraint-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 0.25rem;
+  }
+  .constraint-label.chk { color: var(--accent5); }
+  .constraint-label.uq { color: var(--accent3); }
+  .constraint-label.trg { color: var(--accent6); }
+
+  /* Enums section */
+  .enums-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .enum-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+  .enum-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--accent2);
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    margin-bottom: 0.4rem;
+  }
+  .enum-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .enum-val {
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.2);
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    color: #c4b5fd;
+  }
+
+  /* ER Diagram (SVG) */
+  .er-section {
+    margin: 2rem 0;
+  }
+  .er-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .er-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    overflow-x: auto;
+  }
+  .er-wrap svg { display: block; margin: 0 auto; }
+
+  /* Relationships list */
+  .rel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .rel-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  }
+  .rel-from { color: var(--fk); }
+  .rel-arrow { color: var(--text-dim); }
+  .rel-to { color: var(--pk); }
+  .rel-card { color: var(--text-dim); font-size: 0.65rem; margin-left: auto; }
+
+  @media (max-width: 768px) {
+    .table-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 1.5rem; }
+    .content { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>RIS Platform Database Schema</h1>
+  <div class="sub">PostgreSQL 15 | 21 Migrations | All monetary values BIGINT (raw UGX)</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--pk)"></div> Primary Key</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--fk)"></div> Foreign Key</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--encrypted)"></div> AES-256-GCM Encrypted</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--bigint)"></div> BIGINT Money</div>
+  <div class="legend-item"><span style="color:var(--accent6); font-weight:700;">*</span> NOT NULL</div>
+  <div class="legend-item"><span style="color:#a78bfa; font-size:0.7rem; font-weight:600; border:1px solid rgba(139,92,246,0.3); padding:0 4px; border-radius:3px;">RLS</span> Row-Level Security</div>
+  <div class="legend-item"><span style="color:#f87171; font-size:0.7rem; font-weight:600; border:1px solid rgba(239,68,68,0.3); padding:0 4px; border-radius:3px;">IMMUT</span> Immutable</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="val">22</div><div class="lbl">Tables</div></div>
+  <div class="stat"><div class="val">12</div><div class="lbl">Enums</div></div>
+  <div class="stat"><div class="val">30+</div><div class="lbl">Foreign Keys</div></div>
+  <div class="stat"><div class="val">60+</div><div class="lbl">Indexes</div></div>
+  <div class="stat"><div class="val">10</div><div class="lbl">Triggers</div></div>
+  <div class="stat"><div class="val">6</div><div class="lbl">RLS Policies</div></div>
+</div>
+
+<div class="content">
+
+<!-- ===== ER DIAGRAM ===== -->
+<div class="er-section">
+  <div class="er-title">Entity Relationship Diagram</div>
+  <div class="er-wrap">
+    <svg width="1200" height="780" viewBox="0 0 1200 780" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" opacity="0.6"/>
+        </marker>
+        <marker id="one" markerWidth="8" markerHeight="12" refX="0" refY="6" orient="auto">
+          <line x1="2" y1="1" x2="2" y2="11" stroke="#3b82f6" stroke-width="2" opacity="0.6"/>
+        </marker>
+        <marker id="many" markerWidth="12" markerHeight="12" refX="0" refY="6" orient="auto">
+          <polyline points="8,1 2,6 8,11" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.6"/>
+          <line x1="2" y1="1" x2="2" y2="11" stroke="#3b82f6" stroke-width="1.5" opacity="0.6"/>
+        </marker>
+      </defs>
+
+      <!-- Table boxes -->
+      <!-- Row 1: Core identity -->
+      <rect x="480" y="20" width="140" height="36" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+      <text x="550" y="43" text-anchor="middle" fill="#60a5fa" font-size="13" font-weight="700" font-family="monospace">users</text>
+
+      <!-- Row 2 -->
+      <rect x="220" y="110" width="140" height="36" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="290" y="133" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="700" font-family="monospace">suppliers</text>
+
+      <rect x="720" y="110" width="140" height="36" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="790" y="133" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="700" font-family="monospace">buyers</text>
+
+      <rect x="960" y="20" width="160" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="1040" y="43" text-anchor="middle" fill="#94a3b8" font-size="12" font-weight="600" font-family="monospace">user_settings</text>
+
+      <rect x="20" y="110" width="160" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="100" y="133" text-anchor="middle" fill="#94a3b8" font-size="12" font-weight="600" font-family="monospace">eligibility_checks</text>
+
+      <!-- Row 3: invoices (center) -->
+      <rect x="430" y="210" width="160" height="40" rx="8" fill="#1e293b" stroke="#06b6d4" stroke-width="2.5"/>
+      <text x="510" y="235" text-anchor="middle" fill="#22d3ee" font-size="14" font-weight="800" font-family="monospace">invoices</text>
+
+      <!-- Row 3 sides -->
+      <rect x="20" y="220" width="160" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="100" y="243" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600" font-family="monospace">invoice_documents</text>
+
+      <rect x="670" y="220" width="140" height="36" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+      <text x="740" y="243" text-anchor="middle" fill="#22d3ee" font-size="13" font-weight="700" font-family="monospace">risk_scores</text>
+
+      <rect x="900" y="220" width="160" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="980" y="243" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600" font-family="monospace">invoice_disputes</text>
+
+      <!-- Row 4 -->
+      <rect x="200" y="320" width="140" height="36" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+      <text x="270" y="343" text-anchor="middle" fill="#34d399" font-size="13" font-weight="700" font-family="monospace">approvals</text>
+
+      <rect x="430" y="320" width="140" height="36" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+      <text x="500" y="343" text-anchor="middle" fill="#34d399" font-size="13" font-weight="700" font-family="monospace">collateral</text>
+
+      <rect x="670" y="320" width="140" height="36" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="740" y="343" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700" font-family="monospace">payments</text>
+
+      <rect x="900" y="320" width="180" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="990" y="343" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600" font-family="monospace">approval_info_requests</text>
+
+      <!-- Row 4 sides -->
+      <rect x="20" y="320" width="140" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="90" y="343" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600" font-family="monospace">doc_comments</text>
+
+      <!-- Row 5 -->
+      <rect x="200" y="430" width="160" height="36" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="2"/>
+      <text x="280" y="453" text-anchor="middle" fill="#f87171" font-size="13" font-weight="700" font-family="monospace">collections</text>
+
+      <rect x="480" y="430" width="180" height="36" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="570" y="453" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700" font-family="monospace">bank_facilities</text>
+
+      <rect x="750" y="430" width="160" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="830" y="453" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600" font-family="monospace">webhook_events</text>
+
+      <!-- Row 6 -->
+      <rect x="20" y="530" width="180" height="36" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="110" y="553" text-anchor="middle" fill="#f87171" font-size="11" font-weight="600" font-family="monospace">collection_payments</text>
+
+      <rect x="250" y="530" width="160" height="36" rx="6" fill="#1e293b" stroke="#ec4899" stroke-width="2"/>
+      <text x="330" y="553" text-anchor="middle" fill="#f472b6" font-size="13" font-weight="700" font-family="monospace">settlements</text>
+
+      <rect x="480" y="530" width="180" height="36" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="570" y="553" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700" font-family="monospace">facility_drawdowns</text>
+
+      <rect x="750" y="530" width="180" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="840" y="553" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600" font-family="monospace">collateral_documents</text>
+
+      <!-- Row 7 -->
+      <rect x="250" y="630" width="170" height="36" rx="6" fill="#1e293b" stroke="#ec4899" stroke-width="2"/>
+      <text x="335" y="653" text-anchor="middle" fill="#f472b6" font-size="13" font-weight="700" font-family="monospace">profit_bookings</text>
+
+      <rect x="480" y="630" width="180" height="36" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="570" y="653" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="600" font-family="monospace">facility_repayments</text>
+
+      <!-- Bottom tables -->
+      <rect x="20" y="700" width="160" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="100" y="723" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600" font-family="monospace">pwd_reset_tokens</text>
+
+      <rect x="250" y="700" width="170" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="335" y="723" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600" font-family="monospace">app_assignments</text>
+
+      <rect x="480" y="700" width="140" height="36" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="550" y="723" text-anchor="middle" fill="#94a3b8" font-size="12" font-weight="600" font-family="monospace">risk_config</text>
+
+      <rect x="700" y="700" width="140" height="36" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="2"/>
+      <text x="770" y="723" text-anchor="middle" fill="#f87171" font-size="13" font-weight="700" font-family="monospace">audit_logs</text>
+
+      <!-- Relationship lines -->
+      <!-- users -> suppliers -->
+      <line x1="480" y1="38" x2="360" y2="110" stroke="#3b82f6" stroke-width="1.2" opacity="0.4"/>
+      <!-- users -> buyers (created_by) -->
+      <line x1="620" y1="38" x2="720" y2="110" stroke="#3b82f6" stroke-width="1.2" opacity="0.4"/>
+      <!-- users -> user_settings -->
+      <line x1="620" y1="30" x2="960" y2="30" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- suppliers -> invoices -->
+      <line x1="290" y1="146" x2="460" y2="210" stroke="#3b82f6" stroke-width="1.5" opacity="0.5"/>
+      <!-- buyers -> invoices -->
+      <line x1="790" y1="146" x2="560" y2="210" stroke="#3b82f6" stroke-width="1.5" opacity="0.5"/>
+      <!-- invoices -> risk_scores -->
+      <line x1="590" y1="230" x2="670" y2="238" stroke="#3b82f6" stroke-width="1.2" opacity="0.4"/>
+      <!-- invoices -> approvals -->
+      <line x1="460" y1="250" x2="270" y2="320" stroke="#3b82f6" stroke-width="1.2" opacity="0.4"/>
+      <!-- invoices -> payments -->
+      <line x1="560" y1="250" x2="740" y2="320" stroke="#3b82f6" stroke-width="1.5" opacity="0.5"/>
+      <!-- invoices -> collateral -->
+      <line x1="510" y1="250" x2="500" y2="320" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- invoices -> invoice_documents -->
+      <line x1="430" y1="230" x2="180" y2="238" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- invoices -> invoice_disputes -->
+      <line x1="590" y1="230" x2="900" y2="238" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- invoices -> approval_info_requests -->
+      <line x1="590" y1="240" x2="900" y2="338" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- invoices -> collections -->
+      <line x1="460" y1="250" x2="280" y2="430" stroke="#3b82f6" stroke-width="1.2" opacity="0.4"/>
+      <!-- invoices -> facility_drawdowns -->
+      <line x1="540" y1="250" x2="570" y2="530" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- collections -> collection_payments -->
+      <line x1="250" y1="466" x2="110" y2="530" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- collections -> settlements -->
+      <line x1="280" y1="466" x2="330" y2="530" stroke="#3b82f6" stroke-width="1.2" opacity="0.4"/>
+      <!-- settlements -> profit_bookings -->
+      <line x1="330" y1="566" x2="335" y2="630" stroke="#3b82f6" stroke-width="1.2" opacity="0.4"/>
+      <!-- bank_facilities -> facility_drawdowns -->
+      <line x1="570" y1="466" x2="570" y2="530" stroke="#3b82f6" stroke-width="1.2" opacity="0.4"/>
+      <!-- facility_drawdowns -> facility_repayments -->
+      <line x1="570" y1="566" x2="570" y2="630" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- facility_drawdowns -> settlements -->
+      <line x1="480" y1="548" x2="410" y2="548" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+      <!-- suppliers -> collateral -->
+      <line x1="290" y1="146" x2="470" y2="320" stroke="#3b82f6" stroke-width="1" opacity="0.25"/>
+      <!-- users -> pwd_reset_tokens -->
+      <line x1="500" y1="56" x2="100" y2="700" stroke="#3b82f6" stroke-width="0.8" opacity="0.15" stroke-dasharray="4,4"/>
+      <!-- users -> audit_logs -->
+      <line x1="580" y1="56" x2="770" y2="700" stroke="#3b82f6" stroke-width="0.8" opacity="0.15" stroke-dasharray="4,4"/>
+
+      <!-- Cardinality labels -->
+      <text x="400" y="100" fill="#94a3b8" font-size="9" font-family="monospace">1:1</text>
+      <text x="680" y="100" fill="#94a3b8" font-size="9" font-family="monospace">1:N</text>
+      <text x="380" y="195" fill="#94a3b8" font-size="9" font-family="monospace">1:N</text>
+      <text x="640" y="195" fill="#94a3b8" font-size="9" font-family="monospace">1:N</text>
+      <text x="640" y="230" fill="#94a3b8" font-size="9" font-family="monospace">1:1</text>
+      <text x="650" y="300" fill="#94a3b8" font-size="9" font-family="monospace">1:1</text>
+      <text x="380" y="290" fill="#94a3b8" font-size="9" font-family="monospace">1:N</text>
+      <text x="370" y="400" fill="#94a3b8" font-size="9" font-family="monospace">1:N</text>
+      <text x="305" y="505" fill="#94a3b8" font-size="9" font-family="monospace">1:1</text>
+      <text x="335" y="610" fill="#94a3b8" font-size="9" font-family="monospace">1:1</text>
+      <text x="580" y="505" fill="#94a3b8" font-size="9" font-family="monospace">1:N</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ===== ENUMS ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(139,92,246,0.1); color: #a78bfa;">
+    <span class="dt-icon">&#128195;</span> ENUM Types
+    <span class="dt-count">12 enums</span>
+  </div>
+  <div class="enums-grid">
+    <div class="enum-card">
+      <div class="enum-name">user_role</div>
+      <div class="enum-values">
+        <span class="enum-val">supplier</span><span class="enum-val">credit_officer</span><span class="enum-val">finance_manager</span><span class="enum-val">management</span><span class="enum-val">compliance_officer</span><span class="enum-val">auditor</span><span class="enum-val">legal</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">invoice_status</div>
+      <div class="enum-values">
+        <span class="enum-val">draft</span><span class="enum-val">submitted</span><span class="enum-val">buyer_confirmed</span><span class="enum-val">scored</span><span class="enum-val">priced</span><span class="enum-val">approved</span><span class="enum-val">rejected</span><span class="enum-val">pending_first_auth</span><span class="enum-val">pending_second_auth</span><span class="enum-val">executing</span><span class="enum-val">funded</span><span class="enum-val">collecting</span><span class="enum-val">overdue</span><span class="enum-val">collected</span><span class="enum-val">defaulted</span><span class="enum-val">cancelled</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">kyc_status</div>
+      <div class="enum-values">
+        <span class="enum-val">pending</span><span class="enum-val">documents_submitted</span><span class="enum-val">under_review</span><span class="enum-val">approved</span><span class="enum-val">rejected</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">payment_method</div>
+      <div class="enum-values">
+        <span class="enum-val">MTN_MOMO</span><span class="enum-val">AIRTEL</span><span class="enum-val">EFT</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">payment_status</div>
+      <div class="enum-values">
+        <span class="enum-val">pending_first_auth</span><span class="enum-val">pending_second_auth</span><span class="enum-val">executing</span><span class="enum-val">funded</span><span class="enum-val">failed</span><span class="enum-val">reversed</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">collection_status</div>
+      <div class="enum-values">
+        <span class="enum-val">pending</span><span class="enum-val">reminder_sent</span><span class="enum-val">reminded</span><span class="enum-val">overdue</span><span class="enum-val">partial_payment</span><span class="enum-val">collected</span><span class="enum-val">defaulted</span><span class="enum-val">escalated</span><span class="enum-val">bad_debt</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">collateral_type</div>
+      <div class="enum-values">
+        <span class="enum-val">bank_guarantee</span><span class="enum-val">fixed_deposit_lien</span><span class="enum-val">post_dated_cheque</span><span class="enum-val">corporate_guarantee</span><span class="enum-val">assignment_of_receivables</span><span class="enum-val">performance_bond</span><span class="enum-val">none</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">collateral_enforceability</div>
+      <div class="enum-values">
+        <span class="enum-val">pending_perfection</span><span class="enum-val">perfected</span><span class="enum-val">expired</span><span class="enum-val">contested</span><span class="enum-val">released</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">settlement_status</div>
+      <div class="enum-values">
+        <span class="enum-val">pending</span><span class="enum-val">facility_repaid</span><span class="enum-val">profit_booked</span><span class="enum-val">closed</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">credit_rating</div>
+      <div class="enum-values">
+        <span class="enum-val">A</span><span class="enum-val">B</span><span class="enum-val">C</span><span class="enum-val">D</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">approval_tier (CHECK)</div>
+      <div class="enum-values">
+        <span class="enum-val">AUTO</span><span class="enum-val">TIER_2</span><span class="enum-val">TIER_3</span><span class="enum-val">TIER_4</span>
+      </div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">approval_decision (CHECK)</div>
+      <div class="enum-values">
+        <span class="enum-val">APPROVED</span><span class="enum-val">REJECTED</span><span class="enum-val">ESCALATED</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DOMAIN: IDENTITY & AUTH ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(59,130,246,0.1); color: #60a5fa;">
+    <span class="dt-icon">&#128100;</span> Identity & Authentication
+    <span class="dt-count">4 tables</span>
+  </div>
+  <div class="table-grid">
+
+    <!-- users -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">users</span>
+        <div class="tbl-badges"><span class="tbl-badge rls">RLS</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">email</span><span class="col-type">VARCHAR(255) UNIQUE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">password_hash</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">role</span><span class="col-type">user_role</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">first_name_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">last_name_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">phone_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">is_active</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">two_factor_enabled</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">two_factor_secret</span><span class="col-type">TEXT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">failed_login_count</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">locked_until</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">last_login_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label trg">TRG</span> auto-update updated_at</div>
+      </div>
+    </div>
+
+    <!-- user_settings -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">user_settings</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">user_id</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">email_notifications</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">sms_notifications</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">in_app_notifications</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label uq">UQ</span> user_id (one settings row per user)</div>
+      </div>
+    </div>
+
+    <!-- password_reset_tokens -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">password_reset_tokens</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">user_id</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">token_hash</span><span class="col-type">VARCHAR(64)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">expires_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">used_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+    <!-- eligibility_checks -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">eligibility_checks</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">session_token</span><span class="col-type">VARCHAR(64) UNIQUE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">registered_company</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">authorized_person</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">years_in_business</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">passed</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">funding_requirement</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">expires_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">ip_address</span><span class="col-type">VARCHAR(45)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> years_in_business >= 0</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== DOMAIN: ONBOARDING ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(139,92,246,0.1); color: #a78bfa;">
+    <span class="dt-icon">&#128188;</span> Onboarding (KYC)
+    <span class="dt-count">2 tables</span>
+  </div>
+  <div class="table-grid">
+
+    <!-- suppliers -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">suppliers</span>
+        <div class="tbl-badges"><span class="tbl-badge rls">RLS</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">user_id</span><span class="col-type">UUID -> users UNIQUE</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name nn">company_name</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">company_name_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">registration_number</span><span class="col-type">VARCHAR(100) UNIQUE</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">tax_id / tax_id_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">directors / directors_encrypted</span><span class="col-type enc-type">JSONB / TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">bank_name</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">bank_account_number_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">bank_account_name_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">bank_branch</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">preferred_payment_method</span><span class="col-type">payment_method</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">mobile_money_number_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">kyc_status</span><span class="col-type">kyc_status</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">sanctions_flag</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">sanctions_last_checked_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">risk_tier</span><span class="col-type">VARCHAR(20)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">required_financing_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">consent_ursb_check</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">consent_supplier_refs</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">consent_litigation_check</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">ursb_verified</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">litigation_flag</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">eligibility_session_token</span><span class="col-type">-> eligibility_checks</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+    <!-- buyers -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">buyers</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">company_name</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">registration_number</span><span class="col-type">VARCHAR(100) UNIQUE</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">credit_rating</span><span class="col-type">credit_rating</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">approved_limit</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">used_limit</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">mms_margin_rate</span><span class="col-type">NUMERIC(5,4)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">payment_score</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">contact_email_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name">contact_phone_encrypted</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">sanctions_flag</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">sanctions_last_checked_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">payment_undertaking_signed</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">created_by</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> approved_limit > 0, used_limit >= 0</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== DOMAIN: INVOICES ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(6,182,212,0.1); color: #22d3ee;">
+    <span class="dt-icon">&#128196;</span> Invoice Lifecycle
+    <span class="dt-count">5 tables</span>
+  </div>
+  <div class="table-grid">
+
+    <!-- invoices -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">invoices</span>
+        <div class="tbl-badges"><span class="tbl-badge rls">RLS</span><span class="tbl-badge trigger">TRG x3</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">invoice_number</span><span class="col-type">VARCHAR(100)</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">supplier_id</span><span class="col-type">UUID -> suppliers</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">buyer_id</span><span class="col-type">UUID -> buyers</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">face_value</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">advance_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">discount_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">net_payment_to_supplier</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">status</span><span class="col-type">invoice_status</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">tenor_days</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">due_date</span><span class="col-type">DATE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">description</span><span class="col-type">TEXT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">sla_deadline</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">buyer_confirmed_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name">confirmation_token_hash</span><span class="col-type">VARCHAR(64)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">confirmation_token_expires_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">aml_flagged</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">collateral_coverage_met</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">tier3_rejection_count</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">funded_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">pricing_accepted_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">pricing_accepted_by</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label uq">UQ</span> (invoice_number, supplier_id)</div>
+        <div class="constraint"><span class="constraint-label chk">CHK</span> face_value > 0</div>
+        <div class="constraint"><span class="constraint-label chk">CHK</span> buyer_confirmed_at NOT NULL when status past submitted</div>
+        <div class="constraint"><span class="constraint-label trg">TRG</span> funded_at immutable once set</div>
+        <div class="constraint"><span class="constraint-label trg">TRG</span> auto-set funded_at on status='funded'</div>
+      </div>
+    </div>
+
+    <!-- risk_scores -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">risk_scores</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">invoice_id</span><span class="col-type">UUID -> invoices UNIQUE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">buyer_credit_score</span><span class="col-type">NUMERIC(6,2)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">tenor_score</span><span class="col-type">NUMERIC(6,2)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">track_record_score</span><span class="col-type">NUMERIC(6,2)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">concentration_score</span><span class="col-type">NUMERIC(6,2)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">collateral_score</span><span class="col-type">NUMERIC(6,2)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">final_score</span><span class="col-type">INTEGER (0-100)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">recommendation</span><span class="col-type">VARCHAR(50)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">max_advance_pct</span><span class="col-type">NUMERIC(5,4)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">risk_premium_rate</span><span class="col-type">NUMERIC(5,4)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">advance_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">discount_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">net_payment_to_supplier</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> final_score BETWEEN 0 AND 100</div>
+      </div>
+    </div>
+
+    <!-- invoice_documents -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">invoice_documents</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">invoice_id</span><span class="col-type">UUID -> invoices</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">supplier_id</span><span class="col-type">UUID -> suppliers</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">document_type</span><span class="col-type">VARCHAR(100)</span></div>
+        <div class="col"><div class="col-icon enc">E</div><span class="col-name nn">encrypted_path</span><span class="col-type enc-type">TEXT (AES)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">file_hash</span><span class="col-type">VARCHAR(64) SHA-256</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">file_size_bytes</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">mime_type</span><span class="col-type">VARCHAR(100)</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">uploaded_by</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+    <!-- invoice_disputes -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">invoice_disputes</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">invoice_id</span><span class="col-type">UUID -> invoices</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">buyer_id</span><span class="col-type">UUID -> buyers</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">dispute_reason</span><span class="col-type">TEXT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">dispute_type</span><span class="col-type">TEXT</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">status</span><span class="col-type">TEXT (open/resolved)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">resolved_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">resolved_by</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+    <!-- approvals -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">approvals</span>
+        <div class="tbl-badges"><span class="tbl-badge immutable">IMMUTABLE</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">invoice_id</span><span class="col-type">UUID -> invoices</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">tier</span><span class="col-type">VARCHAR(10)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">decision</span><span class="col-type">VARCHAR(10)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">approver_id</span><span class="col-type">VARCHAR(100)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">comments</span><span class="col-type">TEXT (min 1 char)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">credit_memo</span><span class="col-type">TEXT (50-5000)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> tier IN (AUTO, TIER_2, TIER_3, TIER_4)</div>
+        <div class="constraint"><span class="constraint-label chk">CHK</span> decision IN (APPROVED, REJECTED, ESCALATED)</div>
+        <div class="constraint"><span class="constraint-label trg">TRG</span> prevents UPDATE and DELETE (immutable)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== DOMAIN: PAYMENTS ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(245,158,11,0.1); color: #fbbf24;">
+    <span class="dt-icon">&#128176;</span> Payments & Facilities
+    <span class="dt-count">5 tables</span>
+  </div>
+  <div class="table-grid">
+
+    <!-- payments -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">payments</span>
+        <div class="tbl-badges"><span class="tbl-badge rls">RLS</span><span class="tbl-badge trigger">DUAL AUTH</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">invoice_id</span><span class="col-type">UUID -> invoices UNIQUE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">provider</span><span class="col-type">payment_method</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">status</span><span class="col-type">payment_status</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">dual_auth_user_1</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">dual_auth_timestamp_1</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">dual_auth_user_2</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">dual_auth_timestamp_2</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">idempotency_key</span><span class="col-type">UUID UNIQUE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">transaction_reference</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">provider_reference</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">funded_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">failure_reason</span><span class="col-type">TEXT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> amount > 0</div>
+        <div class="constraint"><span class="constraint-label chk">CHK</span> dual_auth_user_1 != dual_auth_user_2</div>
+        <div class="constraint"><span class="constraint-label trg">TRG</span> enforce dual auth before funded status</div>
+        <div class="constraint"><span class="constraint-label trg">TRG</span> funded_at immutable once set</div>
+      </div>
+    </div>
+
+    <!-- bank_facilities -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">bank_facilities</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">bank_name</span><span class="col-type">VARCHAR(200)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">total_limit</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">drawn_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">available_amount</span><span class="col-type money">BIGINT (computed)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">annual_rate</span><span class="col-type">NUMERIC(8,6)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">maturity_date</span><span class="col-type">DATE</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">status</span><span class="col-type">VARCHAR(20)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> total_limit > 0, drawn >= 0, rate (0,1)</div>
+        <div class="constraint"><span class="constraint-label chk">CHK</span> status IN (active, suspended, matured, closed)</div>
+        <div class="constraint"><span class="constraint-label trg">TRG</span> auto-compute available_amount</div>
+      </div>
+    </div>
+
+    <!-- facility_drawdowns -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">facility_drawdowns</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">facility_id</span><span class="col-type">UUID -> bank_facilities</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">invoice_id</span><span class="col-type">UUID -> invoices</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">principal</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">accrued_interest</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">bank_fees</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">status</span><span class="col-type">VARCHAR(20)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">last_accrued_date</span><span class="col-type">DATE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> principal > 0, interest >= 0, fees >= 0</div>
+        <div class="constraint"><span class="constraint-label chk">CHK</span> status IN (active, repaid, overdue)</div>
+      </div>
+    </div>
+
+    <!-- facility_repayments -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">facility_repayments</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">drawdown_id</span><span class="col-type">UUID -> drawdowns</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">facility_id</span><span class="col-type">UUID -> facilities</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">principal</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">interest</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">bank_fees</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">total_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">repaid_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+    <!-- collateral -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">collateral</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">supplier_id</span><span class="col-type">UUID -> suppliers</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">invoice_id</span><span class="col-type">UUID -> invoices</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">collateral_type</span><span class="col-type">collateral_type</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">value</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">enforceability_status</span><span class="col-type">enforceability enum</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">expiry_date</span><span class="col-type">DATE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">currency</span><span class="col-type">VARCHAR(10) 'UGX'</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">is_active</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">deleted_at</span><span class="col-type">TIMESTAMPTZ (soft)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== DOMAIN: COLLECTIONS & SETTLEMENTS ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(236,72,153,0.1); color: #f472b6;">
+    <span class="dt-icon">&#128181;</span> Collections & Settlements
+    <span class="dt-count">4 tables</span>
+  </div>
+  <div class="table-grid">
+
+    <!-- collections -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">collections</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">invoice_id</span><span class="col-type">UUID -> invoices</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">buyer_id</span><span class="col-type">UUID -> buyers</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">status</span><span class="col-type">collection_status</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">face_value</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">amount_due</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">days_overdue</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">daily_penalty_rate</span><span class="col-type">NUMERIC(6,4)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">penalty_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name">escalation_level</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">demand_notice_sent</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">sar_flagged</span><span class="col-type">BOOLEAN</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">reminder_count</span><span class="col-type">INTEGER</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+    <!-- collection_payments -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">collection_payments</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">collection_id</span><span class="col-type">UUID -> collections</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">amount</span><span class="col-type">NUMERIC(15,2)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">payment_method</span><span class="col-type">VARCHAR(50)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">payment_reference</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">paid_by</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">recorded_by</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">paid_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+    <!-- settlements -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">settlements</span>
+        <div class="tbl-badges"><span class="tbl-badge rls">RLS</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">invoice_id</span><span class="col-type">UUID -> invoices UNIQUE</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">collection_id</span><span class="col-type">UUID -> collections</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">drawdown_id</span><span class="col-type">UUID -> drawdowns</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">buyer_payment_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">facility_repayment_amount</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">accrued_interest</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">penalty_income</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">net_profit</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">status</span><span class="col-type">settlement_status</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">settled_by</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at / updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> buyer_payment_amount > 0</div>
+        <div class="constraint"><span class="constraint-label rls" style="font-size:0.6rem;">RLS</span> read: finance_manager, management, auditor only</div>
+      </div>
+    </div>
+
+    <!-- profit_bookings -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">profit_bookings</span>
+        <div class="tbl-badges"><span class="tbl-badge immutable">IMMUTABLE</span><span class="tbl-badge rls">RLS</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">settlement_id</span><span class="col-type">UUID -> settlements UNIQUE</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">discount_earned</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">bank_cost_paid</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">penalty_income</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">net_profit</span><span class="col-type money">BIGINT</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">booked_by</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">booked_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label trg">TRG</span> prevents UPDATE and DELETE (immutable)</div>
+        <div class="constraint"><span class="constraint-label rls" style="font-size:0.6rem;">RLS</span> insert: finance_manager only</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== DOMAIN: AUDIT & SYSTEM ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(239,68,68,0.1); color: #f87171;">
+    <span class="dt-icon">&#128220;</span> Audit, Config & System
+    <span class="dt-count">6 tables</span>
+  </div>
+  <div class="table-grid">
+
+    <!-- audit_logs -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">audit_logs</span>
+        <div class="tbl-badges"><span class="tbl-badge immutable">IMMUTABLE</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name">user_id</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">action</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name">table_name</span><span class="col-type">VARCHAR(100)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name">record_id</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">old_values</span><span class="col-type">JSONB</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">new_values</span><span class="col-type">JSONB</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">ip_address</span><span class="col-type">VARCHAR(45)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">user_agent</span><span class="col-type">TEXT</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label trg">TRG</span> prevents UPDATE and DELETE (7-year retention)</div>
+        <div class="constraint">No updated_at column — INSERT only</div>
+      </div>
+    </div>
+
+    <!-- risk_config -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">risk_config</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name nn">key</span><span class="col-type">VARCHAR(100)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">value</span><span class="col-type">TEXT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">description</span><span class="col-type">TEXT</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">updated_by</span><span class="col-type">VARCHAR(100)</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint">15 seeded keys: weights, thresholds, advance %, premiums</div>
+      </div>
+    </div>
+
+    <!-- webhook_events -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">webhook_events</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">provider</span><span class="col-type">VARCHAR(50)</span></div>
+        <div class="col"><div class="col-icon idx">IX</div><span class="col-name nn">event_id</span><span class="col-type">VARCHAR(255)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">payload</span><span class="col-type">JSONB</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">status</span><span class="col-type">VARCHAR(50)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name">processed_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label uq">UQ</span> (provider, event_id) — idempotency</div>
+      </div>
+    </div>
+
+    <!-- document_comments -->
+    <div class="tbl">
+      <div class="tbl-head">
+        <span class="tbl-name">document_comments</span>
+        <div class="tbl-badges"><span class="tbl-badge immutable">IMMUTABLE</span></div>
+      </div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">document_id</span><span class="col-type">UUID -> invoice_documents</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">supplier_id</span><span class="col-type">UUID -> suppliers</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">author_id</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">author_role</span><span class="col-type">VARCHAR(50)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">comment_text</span><span class="col-type">TEXT (5-2000 chars)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+    <!-- application_assignments -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">application_assignments</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">entity_type</span><span class="col-type">VARCHAR(20)</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">entity_id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">assigned_to</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">assigned_by</span><span class="col-type">UUID -> users</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">assigned_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">is_active</span><span class="col-type">BOOLEAN</span></div>
+      </div>
+      <div class="tbl-footer">
+        <div class="constraint"><span class="constraint-label chk">CHK</span> entity_type IN (supplier_kyc, invoice)</div>
+        <div class="constraint"><span class="constraint-label uq">UQ</span> (entity_type, entity_id, assigned_to) WHERE active</div>
+      </div>
+    </div>
+
+    <!-- collateral_documents -->
+    <div class="tbl">
+      <div class="tbl-head"><span class="tbl-name">collateral_documents</span></div>
+      <div class="tbl-cols">
+        <div class="col"><div class="col-icon pk">PK</div><span class="col-name">id</span><span class="col-type">UUID</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">collateral_id</span><span class="col-type">UUID -> collateral</span></div>
+        <div class="col"><div class="col-icon fk">FK</div><span class="col-name nn">document_id</span><span class="col-type">UUID -> invoice_documents</span></div>
+        <div class="col"><div class="col-icon reg"></div><span class="col-name nn">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== TRIGGERS SUMMARY ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(245,158,11,0.1); color: #fbbf24;">
+    <span class="dt-icon">&#9889;</span> Triggers & Immutability Summary
+    <span class="dt-count">10 triggers</span>
+  </div>
+  <div class="table-grid">
+    <div class="tbl" style="grid-column: span 2;">
+      <div class="tbl-head"><span class="tbl-name">Database Triggers</span></div>
+      <div class="tbl-cols" style="max-height:none;">
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent6); font-weight:600;">audit_logs</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE/DELETE</span>
+          <span style="color:var(--text);">RAISE EXCEPTION (immutable, 7yr retention)</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent6); font-weight:600;">profit_bookings</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE/DELETE</span>
+          <span style="color:var(--text);">RAISE EXCEPTION (immutable)</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent6); font-weight:600;">approvals</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE/DELETE</span>
+          <span style="color:var(--text);">RAISE EXCEPTION (immutable)</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent6); font-weight:600;">document_comments</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE/DELETE</span>
+          <span style="color:var(--text);">RAISE EXCEPTION (immutable)</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent5); font-weight:600;">payments</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE (funded)</span>
+          <span style="color:var(--text);">Enforce dual_auth_user_1 != dual_auth_user_2</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent5); font-weight:600;">payments</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE</span>
+          <span style="color:var(--text);">funded_at immutable once set</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent3); font-weight:600;">invoices</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE</span>
+          <span style="color:var(--text);">funded_at immutable once set</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent3); font-weight:600;">invoices</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE (funded)</span>
+          <span style="color:var(--text);">Auto-set funded_at = NOW()</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent5); font-weight:600;">bank_facilities</span>
+          <span style="color:var(--text-dim);">BEFORE INSERT/UPDATE</span>
+          <span style="color:var(--text);">Auto-compute available_amount = total - drawn</span>
+        </div>
+        <div class="col" style="grid-template-columns: 1fr 1fr 1fr; padding:6px 1rem;">
+          <span style="color:var(--text-dim); font-weight:600;">9 tables</span>
+          <span style="color:var(--text-dim);">BEFORE UPDATE</span>
+          <span style="color:var(--text);">Auto-update updated_at = NOW()</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RLS SUMMARY ===== -->
+<div class="domain">
+  <div class="domain-title" style="background: rgba(139,92,246,0.1); color: #a78bfa;">
+    <span class="dt-icon">&#128737;</span> Row-Level Security Policies
+    <span class="dt-count">6 policies on 4 tables</span>
+  </div>
+  <div class="table-grid">
+    <div class="tbl" style="grid-column: span 2;">
+      <div class="tbl-head"><span class="tbl-name">RLS Policies</span></div>
+      <div class="tbl-cols" style="max-height:none;">
+        <div class="col" style="grid-template-columns: 140px 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent); font-weight:600;">invoices</span>
+          <span style="color:var(--text-dim);">SELECT</span>
+          <span style="color:var(--text);">Suppliers see only their own invoices (via supplier_id -> user_id match)</span>
+        </div>
+        <div class="col" style="grid-template-columns: 140px 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent); font-weight:600;">suppliers</span>
+          <span style="color:var(--text-dim);">SELECT</span>
+          <span style="color:var(--text);">Suppliers see only their own record (user_id match)</span>
+        </div>
+        <div class="col" style="grid-template-columns: 140px 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent); font-weight:600;">payments</span>
+          <span style="color:var(--text-dim);">SELECT</span>
+          <span style="color:var(--text);">Suppliers see only payments for their invoices</span>
+        </div>
+        <div class="col" style="grid-template-columns: 140px 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent2); font-weight:600;">settlements</span>
+          <span style="color:var(--text-dim);">SELECT</span>
+          <span style="color:var(--text);">finance_manager, management, auditor only</span>
+        </div>
+        <div class="col" style="grid-template-columns: 140px 1fr 1fr; padding:6px 1rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="color:var(--accent2); font-weight:600;">settlements</span>
+          <span style="color:var(--text-dim);">ALL</span>
+          <span style="color:var(--text);">finance_manager, management only</span>
+        </div>
+        <div class="col" style="grid-template-columns: 140px 1fr 1fr; padding:6px 1rem;">
+          <span style="color:var(--accent2); font-weight:600;">profit_bookings</span>
+          <span style="color:var(--text-dim);">INSERT</span>
+          <span style="color:var(--text);">finance_manager only</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="text-align:center; padding:2rem 0; color:var(--text-dim); font-size:0.75rem;">
+  RIS Platform Database Schema | PostgreSQL 15 | 21 Migrations | March 2026 | Confidential
+</div>
+
+</body>
+</html>

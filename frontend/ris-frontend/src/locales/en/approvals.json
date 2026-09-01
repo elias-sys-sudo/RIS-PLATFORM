@@ -1,0 +1,56 @@
+{
+  "page": {
+    "title": "Approvals",
+    "subtitle": "Review and approve invoice submissions",
+    "review_title": "Approval Review",
+    "history_title": "Approval History",
+    "history_subtitle": "Past approval decisions"
+  },
+  "tab": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "all": "All"
+  },
+  "field": {
+    "invoice_number": "Invoice #",
+    "supplier": "Supplier",
+    "buyer": "Buyer",
+    "face_value": "Face Value",
+    "risk": "Risk",
+    "tier": "Tier",
+    "days_in_queue": "Days in Queue",
+    "submitted": "Submitted",
+    "decision": "Decision",
+    "decided_by": "Decided By",
+    "reason": "Reason / Comments"
+  },
+  "stat": {
+    "pending": "pending",
+    "approved_today": "approved today",
+    "rejected_today": "rejected today",
+    "avg_queue": "Avg {{days}}d in queue"
+  },
+  "action": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "request_info": "Request Info"
+  },
+  "dialog": {
+    "approve_title": "Approve Invoice",
+    "approve_description": "This will advance the invoice to the payment authorization queue.",
+    "reject_title": "Reject Invoice",
+    "reject_description": "This action cannot be undone. The supplier will be notified.",
+    "reason_placeholder": "Enter your reasoning (required for reject, optional for approve)...",
+    "info_placeholder": "Ask for additional documentation..."
+  },
+  "section": {
+    "risk_breakdown": "Risk Breakdown",
+    "tier_decisions": "Tier Decisions",
+    "your_decision": "Your Decision"
+  },
+  "empty": {
+    "no_approvals": "No approvals found.",
+    "no_history": "No history found."
+  }
+}

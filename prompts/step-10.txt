@@ -1,0 +1,1 @@
+Create scripts/audit/test-suppliers.ts. Login as admin. Test: 1) GET /suppliers expect paginated list, 2) GET /suppliers/:seed_id expect detail with profile fields, 3) GET /suppliers/:id/buyers expect paginated buyer list, 4) GET /suppliers/:id/buyers?search=partial_name expect filtered results. Run it. Fix failures. Re-run until all 4 pass.

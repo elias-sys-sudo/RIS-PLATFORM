@@ -1,0 +1,240 @@
+{
+  "_about": "End-to-end dummy transaction for RIS — eligibility through settlement. All UGX amounts in BIGINT (whole shillings). Numbers verified against the actual formulas in pricing/risk-engine/collections/settlements.",
+
+  "actors": {
+    "supplier":          { "id": "sup_01HXYZACME", "email": "ops@acme.co.ug",      "role": "supplier" },
+    "buyer":             { "id": "byr_01HXYZMTN",  "name_enc": "MTN Uganda Ltd",   "credit_rating": "A", "approved_limit": 500000000, "used_limit": 120000000 },
+    "credit_officer":    { "id": "usr_co_jane",    "email": "jane@ris.ug",         "role": "credit_officer" },
+    "finance_mgr_1":     { "id": "usr_fm_paul",    "email": "paul@ris.ug",         "role": "finance_manager" },
+    "finance_mgr_2":     { "id": "usr_fm_grace",   "email": "grace@ris.ug",        "role": "finance_manager" },
+    "compliance":        { "id": "usr_co_amina",   "email": "amina@ris.ug",        "role": "compliance_officer" },
+    "management":        { "id": "usr_mg_david",   "email": "david@ris.ug",        "role": "management" }
+  },
+
+  "stage_01_eligibility": {
+    "submitted_at": "2026-04-01T08:14:00Z",
+    "answers": {
+      "registered_company": true,
+      "authorised_signatory": true,
+      "years_in_business": 3,
+      "has_buyer_relationships": true,
+      "consents": { "ursb": true, "supplier_refs": true, "litigation": true }
+    },
+    "result": "ELIGIBILITY_CHECK_PASSED"
+  },
+
+  "stage_02_onboarding_kyc": {
+    "supplier_id": "sup_01HXYZACME",
+    "company_name_enc": "Acme Trading Co Ltd",
+    "company_reg_no": "URSB-80020-2023",
+    "tin": "1000123456",
+    "phone_enc": "+256772111222",
+    "email_enc": "ops@acme.co.ug",
+    "bank": { "name": "Stanbic", "account_enc": "9030001234567" },
+    "documents": [
+      { "type": "cert_incorporation",  "status": "uploaded" },
+      { "type": "tax_registration",    "status": "uploaded" },
+      { "type": "director_id",         "status": "uploaded" },
+      { "type": "signed_agreement",    "status": "uploaded" }
+    ],
+    "kyc_status": "approved",
+    "approved_by": "usr_co_amina",
+    "approved_at": "2026-04-02T10:00:00Z"
+  },
+
+  "stage_03_invoice_submission": {
+    "invoice_id": "inv_01HXYZ001",
+    "supplier_id": "sup_01HXYZACME",
+    "buyer_id": "byr_01HXYZMTN",
+    "invoice_number": "ACME-2026-0042",
+    "face_value": 50000000,
+    "currency": "UGX",
+    "issue_date": "2026-04-03",
+    "due_date": "2026-06-02",
+    "tenor_days": 60,
+    "validation_chain": {
+      "step1_supplier_active": "PASS",
+      "step2_duplicate":       "PASS",
+      "step3_buyer_eligible":  "PASS",
+      "step4_tenor_in_range":  "PASS  (7 ≤ 60 ≤ 90)",
+      "step5_credit_limit":    "PASS  (120M + 50M ≤ 500M)"
+    },
+    "aml": { "flagged": false, "structuring": false, "velocity_spike": false, "note": "face 50M < 100M threshold" },
+    "status": "submitted",
+    "sla_deadline": "2026-04-06T08:14:00Z"
+  },
+
+  "stage_04_buyer_confirmation": {
+    "token_hash": "sha256:8c2a…f91d",
+    "expires_at": "2026-04-05T08:30:00Z",
+    "confirmed_at": "2026-04-03T14:22:00Z",
+    "confirmed_by_ip": "196.43.x.x",
+    "acknowledgements": {
+      "notice_of_assignment": true,
+      "payment_to_mms_only":  true,
+      "no_offset":            true,
+      "binding_obligation":   true
+    },
+    "status": "buyer_confirmed"
+  },
+
+  "stage_05_risk_scoring": {
+    "factors": {
+      "buyer_credit":          { "weight": 0.30, "raw": 100, "weighted": 30.00, "note": "rating A" },
+      "supplier_track_record": { "weight": 0.25, "raw":  85, "weighted": 21.25, "note": "8 invoices, 95% on-time" },
+      "collateral":            { "weight": 0.20, "raw":  75, "weighted": 15.00, "note": "assignment of receivable" },
+      "concentration_risk":    { "weight": 0.15, "raw": 100, "weighted": 15.00, "note": "buyer exposure 24% of portfolio" },
+      "tenor":                 { "weight": 0.10, "raw":  75, "weighted":  7.50, "note": "60d band" }
+    },
+    "composite_score": 89,
+    "recommendation": "AUTO_APPROVE",
+    "max_advance_pct": 0.95,
+    "risk_premium_rate": 0.000,
+    "status": "scored"
+  },
+
+  "stage_06_pricing": {
+    "facility_id": "fac_01HXYZBOU",
+    "rates": { "bank_cost_rate": 0.12, "risk_premium_rate": 0.00, "mms_margin_rate": 0.025 },
+    "total_annual_rate": 0.145,
+    "rate_cap_check": "PASS  (0.145 ≤ 0.15)",
+    "discount_rate": 0.023836,
+    "computed": {
+      "advance_amount":          47500000,
+      "discount_amount":          1191781,
+      "net_payment_to_supplier": 46308219,
+      "bank_cost_amount":          936986,
+      "mms_net_profit":            254795
+    },
+    "_formula_walkthrough": [
+      "discountRate     = (0.12 + 0.00 + 0.025) × 60/365 = 0.023836",
+      "advance          = 50_000_000 × 0.95            = 47_500_000",
+      "discount         = 50_000_000 × 0.023836        =  1_191_781",
+      "net_to_supplier  = 47_500_000 − 1_191_781       = 46_308_219",
+      "bank_cost        = 47_500_000 × 0.12 × 60/365   =    936_986",
+      "mms_profit       =  1_191_781 −   936_986       =    254_795"
+    ],
+    "status": "priced"
+  },
+
+  "stage_07_approvals": {
+    "tier": "TIER_2",
+    "_tier_logic": "face 50M ≥ 10M (not >50M) AND not AML  →  single credit_officer approval",
+    "approval_1": {
+      "user_id": "usr_co_jane",
+      "decision": "APPROVED",
+      "comment": "Strong score, A-rated buyer, within facility headroom",
+      "decided_at": "2026-04-03T15:10:00Z"
+    },
+    "status": "approved"
+  },
+
+  "stage_08_payment_initiation": {
+    "payment_id": "pay_01HXYZ001",
+    "idempotency_key": "ik_acme_inv42_v1",
+    "amount": 47500000,
+    "method": "MTN_MOMO",
+    "checks": {
+      "kill_switch": "off",
+      "collateral_coverage_ratio": 0.62,
+      "collateral_check":          "PASS  (0.62 ≥ 0.50)",
+      "facility_liquidity":        "PASS  (available 380M ≥ 47.5M)",
+      "aml_cleared":               "n/a (not flagged)"
+    },
+    "status": "pending_first_auth"
+  },
+
+  "stage_09_dual_authorisation": {
+    "first_auth": {
+      "user_id": "usr_fm_paul",
+      "twofa_verified_minutes_ago": 4,
+      "business_hours": true,
+      "at": "2026-04-03T15:35:00Z"
+    },
+    "second_auth": {
+      "user_id": "usr_fm_grace",
+      "twofa_verified_minutes_ago": 2,
+      "different_user_check": "PASS  (paul ≠ grace)",
+      "db_trigger_check":     "PASS",
+      "at": "2026-04-03T15:38:00Z"
+    },
+    "status_after": "executing"
+  },
+
+  "stage_10_provider_disbursement": {
+    "provider": "MTN_MOMO",
+    "external_ref": "MTNMM-9F2A-1B3C",
+    "webhook": {
+      "received_at": "2026-04-03T15:39:42Z",
+      "signature_valid": true,
+      "idempotent": true,
+      "status_code": "SUCCESS"
+    },
+    "credited_to_supplier": 46308219,
+    "status": "funded"
+  },
+
+  "stage_11_collections_on_time": {
+    "due_date": "2026-06-02",
+    "buyer_paid_at": "2026-06-01T11:05:00Z",
+    "amount_received": 50000000,
+    "days_overdue": 0,
+    "penalty": 0,
+    "escalation_level": 0,
+    "sar_flag": false,
+    "status": "collected"
+  },
+
+  "stage_11_alt_overdue_example": {
+    "_note": "Same invoice if buyer paid 10 days late — for testing the penalty path",
+    "days_overdue": 10,
+    "daily_rate": 0.001,
+    "penalty_calc": "50_000_000 × 0.001 × 10 = 500_000",
+    "penalty": 500000,
+    "escalation_level": 2,
+    "amount_received": 50500000,
+    "sar_flag": false
+  },
+
+  "stage_12_settlement": {
+    "settlement_id": "set_01HXYZ001",
+    "facility_repayment": {
+      "principal_repaid": 47500000,
+      "interest_paid":      936986,
+      "total_to_bank":    48436986
+    },
+    "buyer_payment_received": 50000000,
+    "discount_earned":         1191781,
+    "bank_cost_paid":           936986,
+    "penalty_income":                0,
+    "net_profit":               254795,
+    "_formula": "netProfit = 1_191_781 − 936_986 + 0 = 254_795",
+    "state_machine": [
+      { "at": "2026-06-01T11:10:00Z", "status": "pending" },
+      { "at": "2026-06-01T11:12:00Z", "status": "facility_repaid" },
+      { "at": "2026-06-01T11:13:00Z", "status": "profit_booked",  "immutable": true },
+      { "at": "2026-06-01T11:15:00Z", "status": "closed" }
+    ]
+  },
+
+  "stage_13_audit_trail_summary": [
+    "ELIGIBILITY_CHECK_PASSED",
+    "SUPPLIER_REGISTERED",
+    "SUPPLIER_KYC_APPROVED",
+    "INVOICE_SUBMITTED",
+    "VALIDATION_STEP_1..5_PASS",
+    "BUYER_CONFIRMED",
+    "INVOICE_SCORED  (score 89, AUTO_APPROVE)",
+    "INVOICE_PRICED  (advance 47.5M, discount 1.19M, net 46.3M)",
+    "APPROVAL_RECORDED  (TIER_2 by usr_co_jane)",
+    "PAYMENT_CREATED",
+    "PAYMENT_FIRST_AUTH  (paul)",
+    "PAYMENT_SECOND_AUTH (grace)",
+    "PAYMENT_FUNDED",
+    "COLLECTION_RECEIVED",
+    "SETTLEMENT_INITIATED",
+    "SETTLEMENT_FACILITY_REPAID",
+    "SETTLEMENT_PROFIT_BOOKED",
+    "SETTLEMENT_CLOSED"
+  ]
+}

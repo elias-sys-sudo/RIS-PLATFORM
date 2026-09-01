@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RIS Platform — Full SDLC Overview</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-border: #334155;
+    --accent: #3b82f6;
+    --accent2: #8b5cf6;
+    --accent3: #06b6d4;
+    --accent4: #10b981;
+    --accent5: #f59e0b;
+    --accent6: #ef4444;
+    --accent7: #ec4899;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-bright: #f8fafc;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    margin-bottom: 3rem;
+  }
+  .section {
+    max-width: 1400px;
+    margin: 0 auto 3rem;
+  }
+  .section-title {
+    font-size: 1.5rem;
+    color: var(--text-bright);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-title .num {
+    background: var(--accent);
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ===== SDLC FLOW ===== */
+  .sdlc-flow {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 2rem 0;
+  }
+  .sdlc-phase {
+    display: flex;
+    align-items: center;
+  }
+  .sdlc-box {
+    background: var(--card);
+    border: 2px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    min-width: 150px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .sdlc-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  }
+  .sdlc-box .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .sdlc-box .label { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .sdlc-box .detail { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+  .sdlc-arrow {
+    font-size: 1.5rem;
+    color: var(--accent);
+    padding: 0 0.5rem;
+    display: flex;
+    align-items: center;
+  }
+  .sdlc-box.c1 { border-color: var(--accent); }
+  .sdlc-box.c2 { border-color: var(--accent2); }
+  .sdlc-box.c3 { border-color: var(--accent3); }
+  .sdlc-box.c4 { border-color: var(--accent4); }
+  .sdlc-box.c5 { border-color: var(--accent5); }
+  .sdlc-box.c6 { border-color: var(--accent6); }
+  .sdlc-box.c7 { border-color: var(--accent7); }
+
+  /* ===== ARCHITECTURE ===== */
+  .arch-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .arch-zone {
+    background: var(--card);
+    border: 2px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+  }
+  .arch-zone.dmz { border-color: var(--accent5); }
+  .arch-zone.internal { border-color: var(--accent); }
+  .arch-zone.restricted { border-color: var(--accent6); }
+  .zone-label {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    padding: 2px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .dmz .zone-label { background: var(--accent5); color: #000; }
+  .internal .zone-label { background: var(--accent); color: #fff; }
+  .restricted .zone-label { background: var(--accent6); color: #fff; }
+  .arch-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    justify-content: center;
+  }
+  .arch-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    min-width: 120px;
+  }
+  .arch-item .name { font-weight: 600; font-size: 0.85rem; }
+  .arch-item .tech { font-size: 0.7rem; color: var(--text-dim); }
+
+  /* ===== PIPELINE ===== */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+  .pipeline-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+  .pipeline-stage {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    padding: 1rem;
+    text-align: center;
+    position: relative;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .pipeline-stage .stage-num {
+    font-size: 1.5rem;
+    font-weight: 800;
+    opacity: 0.15;
+    position: absolute;
+    top: 4px;
+    right: 8px;
+  }
+  .pipeline-stage .stage-name { font-weight: 600; font-size: 0.8rem; }
+  .pipeline-stage .stage-detail { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.25rem; }
+  .pipeline-stage.green { border-left: 4px solid var(--accent4); }
+  .pipeline-stage.blue { border-left: 4px solid var(--accent); }
+  .pipeline-stage.yellow { border-left: 4px solid var(--accent5); }
+  .pipeline-stage.red { border-left: 4px solid var(--accent6); }
+  .pipeline-stage.purple { border-left: 4px solid var(--accent2); }
+  .pipeline-connector {
+    text-align: center;
+    padding: 0.25rem;
+    color: var(--accent);
+    font-size: 1.2rem;
+  }
+
+  /* ===== MODULE GRID ===== */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+  }
+  .module-card {
+    background: var(--card);
+    border: 2px solid var(--card-border);
+    border-radius: 10px;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .module-card .order {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    opacity: 0.08;
+  }
+  .module-card .name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem; }
+  .module-card .files { font-size: 0.7rem; color: var(--text-dim); }
+  .module-card .bar {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 0.75rem;
+    background: rgba(255,255,255,0.1);
+    overflow: hidden;
+  }
+  .module-card .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .module-card .pct { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.25rem; text-align: right; }
+
+  /* ===== INVOICE STATUS ===== */
+  .status-flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+  }
+  .status-node {
+    background: var(--card);
+    border: 2px solid var(--card-border);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .status-arrow {
+    color: var(--accent);
+    padding: 0 0.25rem;
+    font-size: 1rem;
+  }
+  .status-node.s-inv { border-color: #3b82f6; color: #60a5fa; }
+  .status-node.s-ver { border-color: #8b5cf6; color: #a78bfa; }
+  .status-node.s-risk { border-color: #06b6d4; color: #22d3ee; }
+  .status-node.s-app { border-color: #10b981; color: #34d399; }
+  .status-node.s-pay { border-color: #f59e0b; color: #fbbf24; }
+  .status-node.s-col { border-color: #ef4444; color: #f87171; }
+  .status-node.s-set { border-color: #ec4899; color: #f472b6; }
+  .status-owner {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* ===== TECH STACK ===== */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+  }
+  .stack-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .stack-card .stack-icon {
+    font-size: 1.8rem;
+    width: 48px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .stack-card .stack-info .layer { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stack-card .stack-info .tech-name { font-weight: 600; font-size: 0.9rem; }
+
+  /* ===== SECURITY ===== */
+  .security-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.75rem;
+  }
+  .sec-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+  }
+  .sec-card .sec-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .sec-card .sec-detail { font-size: 0.75rem; color: var(--text-dim); }
+
+  /* ===== SAFEGUARD ===== */
+  .safeguard-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .sg-layer {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .sg-layer .sg-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .sg-layer.l1 .sg-badge { background: var(--accent6); }
+  .sg-layer.l2 .sg-badge { background: var(--accent5); }
+  .sg-layer.l3 .sg-badge { background: var(--accent4); }
+  .sg-layer .sg-content { flex: 1; }
+  .sg-layer .sg-name { font-weight: 700; font-size: 0.95rem; }
+  .sg-layer .sg-desc { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+  /* ===== CHECKLIST ===== */
+  .checklist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.75rem;
+  }
+  .check-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .check-card .check-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+  .check-card .check-title { font-weight: 700; font-size: 0.9rem; }
+  .check-card .check-count {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+  .check-card .check-items { font-size: 0.75rem; color: var(--text-dim); line-height: 1.8; }
+
+  /* ===== DEPENDENCY GRAPH (SVG) ===== */
+  .dep-graph {
+    width: 100%;
+    overflow-x: auto;
+    padding: 1rem 0;
+  }
+  .dep-graph svg {
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    body { padding: 1rem; }
+    h1 { font-size: 1.8rem; }
+    .sdlc-flow { flex-direction: column; align-items: center; }
+    .sdlc-arrow { transform: rotate(90deg); }
+    .pipeline-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<h1>RIS Platform</h1>
+<p class="subtitle">Invoice Discounting & Early Payment Platform for Uganda — Full SDLC Overview</p>
+
+<!-- ===== 1. SDLC LIFECYCLE FLOW ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">1</span> SDLC Lifecycle Flow</div>
+  <div class="sdlc-flow">
+    <div class="sdlc-phase">
+      <div class="sdlc-box c1">
+        <div class="icon">&#128203;</div>
+        <div class="label">Requirements</div>
+        <div class="detail">57+ functional reqs<br>66 non-functional<br>MoSCoW priority</div>
+      </div>
+    </div>
+    <div class="sdlc-arrow">&#9654;</div>
+    <div class="sdlc-phase">
+      <div class="sdlc-box c2">
+        <div class="icon">&#128736;</div>
+        <div class="label">Design</div>
+        <div class="detail">8 ADRs, C4 model<br>STRIDE threats<br>Service contracts</div>
+      </div>
+    </div>
+    <div class="sdlc-arrow">&#9654;</div>
+    <div class="sdlc-phase">
+      <div class="sdlc-box c3">
+        <div class="icon">&#128187;</div>
+        <div class="label">Develop</div>
+        <div class="detail">19 modules<br>12 rules enforced<br>3-layer safeguard</div>
+      </div>
+    </div>
+    <div class="sdlc-arrow">&#9654;</div>
+    <div class="sdlc-phase">
+      <div class="sdlc-box c4">
+        <div class="icon">&#9989;</div>
+        <div class="label">Test</div>
+        <div class="detail">Jest 80%+ / 95%<br>Vitest + Playwright<br>Integration (PG+Redis)</div>
+      </div>
+    </div>
+    <div class="sdlc-arrow">&#9654;</div>
+    <div class="sdlc-phase">
+      <div class="sdlc-box c5">
+        <div class="icon">&#9881;</div>
+        <div class="label">CI/CD</div>
+        <div class="detail">10-stage pipeline<br>OWASP ZAP scan<br>MD/CTO approval</div>
+      </div>
+    </div>
+    <div class="sdlc-arrow">&#9654;</div>
+    <div class="sdlc-phase">
+      <div class="sdlc-box c6">
+        <div class="icon">&#128640;</div>
+        <div class="label">Deploy</div>
+        <div class="detail">Docker Swarm<br>Nginx WAF<br>Auto-rollback</div>
+      </div>
+    </div>
+    <div class="sdlc-arrow">&#9654;</div>
+    <div class="sdlc-phase">
+      <div class="sdlc-box c7">
+        <div class="icon">&#128200;</div>
+        <div class="label">Operate</div>
+        <div class="detail">4-layer logging<br>Circuit breakers<br>30-day review</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 2. TECH STACK ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">2</span> Technology Stack</div>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="stack-icon">&#9881;</div>
+      <div class="stack-info">
+        <div class="layer">Runtime</div>
+        <div class="tech-name">Node.js 20 + Express 4 + TS 5</div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-icon">&#128451;</div>
+      <div class="stack-info">
+        <div class="layer">Database</div>
+        <div class="tech-name">PostgreSQL 15 (RLS + Raw SQL)</div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-icon">&#9889;</div>
+      <div class="stack-info">
+        <div class="layer">Cache / Queue</div>
+        <div class="tech-name">Redis 7 + BullMQ</div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-icon">&#128274;</div>
+      <div class="stack-info">
+        <div class="layer">Auth</div>
+        <div class="tech-name">JWT (15m) + bcrypt 12 + TOTP</div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-icon">&#128272;</div>
+      <div class="stack-info">
+        <div class="layer">Encryption</div>
+        <div class="tech-name">AES-256-GCM (all PII)</div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-icon">&#128179;</div>
+      <div class="stack-info">
+        <div class="layer">Payments</div>
+        <div class="tech-name">MTN MoMo + Airtel + EFT</div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-icon">&#127912;</div>
+      <div class="stack-info">
+        <div class="layer">Frontend</div>
+        <div class="tech-name">React 19 + Vite + TanStack + shadcn</div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-icon">&#128230;</div>
+      <div class="stack-info">
+        <div class="layer">Infra</div>
+        <div class="tech-name">Docker Swarm + Nginx + GHCR</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3. SYSTEM ARCHITECTURE ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">3</span> System Architecture (C4 Level 2)</div>
+  <div class="arch-container">
+    <div class="arch-zone dmz">
+      <div class="zone-label">DMZ Zone</div>
+      <div class="arch-items">
+        <div class="arch-item">
+          <div class="name">Nginx</div>
+          <div class="tech">Reverse Proxy + WAF + Rate Limit</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">React SPA</div>
+          <div class="tech">Supplier Portal + Admin Dashboard</div>
+        </div>
+        <div class="arch-item" style="border-color: rgba(245,158,11,0.3);">
+          <div class="name">External APIs</div>
+          <div class="tech">MTN MoMo | Airtel Money | Banks (EFT)</div>
+        </div>
+        <div class="arch-item" style="border-color: rgba(245,158,11,0.3);">
+          <div class="name">Notifications</div>
+          <div class="tech">SendGrid (Email) | Africa's Talking (SMS)</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; padding: 0.5rem; color: var(--accent); font-size: 1.5rem;">&#8595; &#8593;</div>
+    <div class="arch-zone internal">
+      <div class="zone-label">Internal Zone</div>
+      <div class="arch-items">
+        <div class="arch-item">
+          <div class="name">Express API</div>
+          <div class="tech">18 Routers | Port 3000</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">Auth Module</div>
+          <div class="tech">JWT + TOTP 2FA + RBAC (6 roles)</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">Business Modules</div>
+          <div class="tech">Invoices | Risk | Pricing | Approvals</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">Financial Modules</div>
+          <div class="tech">Payments | Collections | Settlements</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">BullMQ Workers</div>
+          <div class="tech">7 Queues | Exponential Retry</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">Middleware Stack</div>
+          <div class="tech">Helmet | XSS | Joi | Audit</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; padding: 0.5rem; color: var(--accent6); font-size: 1.5rem;">&#8595; &#8593;</div>
+    <div class="arch-zone restricted">
+      <div class="zone-label">Restricted Zone</div>
+      <div class="arch-items">
+        <div class="arch-item">
+          <div class="name">PostgreSQL 15</div>
+          <div class="tech">21 Migrations | RLS | BIGINT Money</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">Redis 7</div>
+          <div class="tech">BullMQ Queues | Sessions | Rate Limits</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">Audit Logs</div>
+          <div class="tech">Immutable | 7-Year Retention</div>
+        </div>
+        <div class="arch-item">
+          <div class="name">Encrypted Storage</div>
+          <div class="tech">AES-256-GCM PII | Documents</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 4. MODULE DEPENDENCY GRAPH ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">4</span> Module Dependency Graph</div>
+  <div class="dep-graph">
+    <svg width="900" height="520" viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+        </marker>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Boxes -->
+      <rect x="370" y="10" width="140" height="44" rx="10" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+      <text x="440" y="37" text-anchor="middle" fill="#60a5fa" font-size="13" font-weight="700">AUTH</text>
+
+      <rect x="370" y="80" width="140" height="44" rx="10" fill="#1e293b" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="440" y="107" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="700">ONBOARDING</text>
+
+      <rect x="370" y="150" width="140" height="44" rx="10" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+      <text x="440" y="177" text-anchor="middle" fill="#22d3ee" font-size="13" font-weight="700">INVOICES</text>
+
+      <rect x="370" y="220" width="140" height="44" rx="10" fill="#1e293b" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="440" y="247" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="700">VERIFICATION</text>
+
+      <rect x="580" y="220" width="140" height="44" rx="10" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+      <text x="650" y="247" text-anchor="middle" fill="#22d3ee" font-size="13" font-weight="700">RISK-ENGINE</text>
+
+      <rect x="580" y="290" width="140" height="44" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+      <text x="650" y="317" text-anchor="middle" fill="#34d399" font-size="13" font-weight="700">PRICING</text>
+
+      <rect x="580" y="360" width="140" height="44" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+      <text x="650" y="387" text-anchor="middle" fill="#34d399" font-size="13" font-weight="700">APPROVALS</text>
+
+      <rect x="580" y="430" width="140" height="44" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="650" y="457" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700">PAYMENTS</text>
+
+      <rect x="160" y="290" width="140" height="44" rx="10" fill="#1e293b" stroke="#ef4444" stroke-width="2"/>
+      <text x="230" y="317" text-anchor="middle" fill="#f87171" font-size="13" font-weight="700">COLLECTIONS</text>
+
+      <rect x="160" y="360" width="140" height="44" rx="10" fill="#1e293b" stroke="#ec4899" stroke-width="2"/>
+      <text x="230" y="387" text-anchor="middle" fill="#f472b6" font-size="13" font-weight="700">SETTLEMENTS</text>
+
+      <rect x="370" y="430" width="140" height="44" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+      <text x="440" y="457" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700">FACILITIES</text>
+
+      <rect x="30" y="430" width="140" height="44" rx="10" fill="#1e293b" stroke="#94a3b8" stroke-width="1"/>
+      <text x="100" y="452" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600">REPORTING</text>
+      <text x="100" y="466" text-anchor="middle" fill="#64748b" font-size="9">(reads all)</text>
+
+      <rect x="750" y="80" width="130" height="44" rx="10" fill="#1e293b" stroke="#94a3b8" stroke-width="1"/>
+      <text x="815" y="102" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="600">NOTIFICATIONS</text>
+      <text x="815" y="116" text-anchor="middle" fill="#64748b" font-size="9">(BullMQ worker)</text>
+
+      <!-- Arrows -->
+      <line x1="440" y1="54" x2="440" y2="80" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+      <line x1="440" y1="124" x2="440" y2="150" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+      <line x1="440" y1="194" x2="440" y2="220" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+      <line x1="510" y1="242" x2="580" y2="242" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+      <line x1="650" y1="264" x2="650" y2="290" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+      <line x1="650" y1="334" x2="650" y2="360" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+      <line x1="650" y1="404" x2="650" y2="430" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+      <!-- Collections arrow from invoices -->
+      <path d="M370,172 L230,172 L230,290" stroke="#3b82f6" stroke-width="1.5" fill="none" marker-end="url(#arrowhead)"/>
+      <!-- Collections arrow from payments -->
+      <path d="M580,452 L530,452 L530,490 L230,490 L230,334" stroke="#3b82f6" stroke-width="1.5" fill="none" marker-end="url(#arrowhead)"/>
+      <!-- Settlements from collections -->
+      <line x1="230" y1="334" x2="230" y2="360" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+      <!-- Facilities from payments -->
+      <path d="M580,452 L510,452" stroke="#3b82f6" stroke-width="1.5" fill="none" marker-end="url(#arrowhead)"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ===== 5. INVOICE STATUS MACHINE ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">5</span> Invoice Status Machine (Owned Transitions)</div>
+  <div class="status-flow">
+    <div class="status-node s-inv">draft<span class="status-owner">invoices</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-inv">submitted<span class="status-owner">invoices</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-ver">buyer_confirmed<span class="status-owner">verification</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-risk">scored<span class="status-owner">risk-engine</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-risk">priced<span class="status-owner">pricing</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-app">approved<span class="status-owner">approvals</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-pay">pending_1st_auth<span class="status-owner">payments</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-pay">pending_2nd_auth<span class="status-owner">payments</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-pay">executing<span class="status-owner">payments</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-pay">funded<span class="status-owner">webhook</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-col">collecting<span class="status-owner">collections</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-col">collected<span class="status-owner">collections</span></div>
+    <div class="status-arrow">&#8594;</div>
+    <div class="status-node s-set">settlement_closed<span class="status-owner">settlements</span></div>
+  </div>
+  <div style="text-align:center; margin-top: 0.5rem;">
+    <span style="font-size: 0.75rem; color: var(--text-dim);">Branch paths: approved &#8594; <span style="color:#f87171;">rejected</span> | collecting &#8594; <span style="color:#f87171;">overdue</span> &#8594; <span style="color:#f87171;">defaulted</span></span>
+  </div>
+</div>
+
+<!-- ===== 6. BUILD MODULES ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">6</span> Module Build Status</div>
+  <div class="module-grid">
+    <div class="module-card">
+      <div class="order">1</div>
+      <div class="name" style="color:#60a5fa;">Auth</div>
+      <div class="files">5 files | JWT + TOTP + bcrypt</div>
+      <div class="bar"><div class="bar-fill" style="width:71%; background:var(--accent);"></div></div>
+      <div class="pct">71%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">2</div>
+      <div class="name" style="color:#a78bfa;">Onboarding</div>
+      <div class="files">7 files | KYC + Sanctions + PII</div>
+      <div class="bar"><div class="bar-fill" style="width:87%; background:var(--accent2);"></div></div>
+      <div class="pct">87%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">3</div>
+      <div class="name" style="color:#22d3ee;">Invoices</div>
+      <div class="files">5 files | 5-step validation + AML</div>
+      <div class="bar"><div class="bar-fill" style="width:75%; background:var(--accent3);"></div></div>
+      <div class="pct">75%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">4</div>
+      <div class="name" style="color:#a78bfa;">Verification</div>
+      <div class="files">5 files | Buyer confirm + tokens</div>
+      <div class="bar"><div class="bar-fill" style="width:67%; background:var(--accent2);"></div></div>
+      <div class="pct">67%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">5</div>
+      <div class="name" style="color:#22d3ee;">Risk-Engine</div>
+      <div class="files">5 files | 5-factor scorer (95% cov)</div>
+      <div class="bar"><div class="bar-fill" style="width:89%; background:var(--accent3);"></div></div>
+      <div class="pct">89%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">6</div>
+      <div class="name" style="color:#34d399;">Pricing</div>
+      <div class="files">5 files | BigInt PRECISION=1e8</div>
+      <div class="bar"><div class="bar-fill" style="width:89%; background:var(--accent4);"></div></div>
+      <div class="pct">89%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">7</div>
+      <div class="name" style="color:#34d399;">Approvals</div>
+      <div class="files">5 files | 3-tier matrix + quorum</div>
+      <div class="bar"><div class="bar-fill" style="width:88%; background:var(--accent4);"></div></div>
+      <div class="pct">88%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">8</div>
+      <div class="name" style="color:#fbbf24;">Payments</div>
+      <div class="files">5+4 files | Dual auth 3 layers (95%)</div>
+      <div class="bar"><div class="bar-fill" style="width:80%; background:var(--accent5);"></div></div>
+      <div class="pct">80%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">9</div>
+      <div class="name" style="color:#f87171;">Collections</div>
+      <div class="files">5 files | Penalties + SAR</div>
+      <div class="bar"><div class="bar-fill" style="width:89%; background:var(--accent6);"></div></div>
+      <div class="pct">89%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">10</div>
+      <div class="name" style="color:#fbbf24;">Facilities</div>
+      <div class="files">5 files | Drawdown + utilisation</div>
+      <div class="bar"><div class="bar-fill" style="width:75%; background:var(--accent5);"></div></div>
+      <div class="pct">~75%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">11</div>
+      <div class="name" style="color:#94a3b8;">Reporting</div>
+      <div class="files">5 files | Read-only analytics</div>
+      <div class="bar"><div class="bar-fill" style="width:70%; background:#64748b;"></div></div>
+      <div class="pct">~70%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">12</div>
+      <div class="name" style="color:#f472b6;">Notifications</div>
+      <div class="files">6 files | Circuit breaker + idempotent</div>
+      <div class="bar"><div class="bar-fill" style="width:85%; background:var(--accent7);"></div></div>
+      <div class="pct">~85%</div>
+    </div>
+    <div class="module-card">
+      <div class="order">13</div>
+      <div class="name" style="color:#f472b6;">Settlements</div>
+      <div class="files">5 files | Profit booking</div>
+      <div class="bar"><div class="bar-fill" style="width:70%; background:var(--accent7);"></div></div>
+      <div class="pct">~70%</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 7. CI/CD PIPELINE ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">7</span> CI/CD Pipeline (10 Stages)</div>
+  <div class="pipeline">
+    <div style="text-align:center; margin-bottom:0.5rem; font-size:0.8rem; color:var(--text-dim);">Every Push</div>
+    <div class="pipeline-row">
+      <div class="pipeline-stage green">
+        <div class="stage-num">1</div>
+        <div class="stage-name">Lint + TypeScript + Prettier</div>
+        <div class="stage-detail">Zero errors, strict mode</div>
+      </div>
+      <div class="pipeline-stage green">
+        <div class="stage-num">2</div>
+        <div class="stage-name">Security Scan</div>
+        <div class="stage-detail">npm audit + secret detection</div>
+      </div>
+      <div class="pipeline-stage green">
+        <div class="stage-num">3</div>
+        <div class="stage-name">Unit Tests + Coverage</div>
+        <div class="stage-detail">80% global / 95% critical</div>
+      </div>
+    </div>
+    <div class="pipeline-connector">&#8595;</div>
+    <div class="pipeline-row">
+      <div class="pipeline-stage blue">
+        <div class="stage-num">4</div>
+        <div class="stage-name">Integration Tests</div>
+        <div class="stage-detail">Real Postgres 15 + Redis 7</div>
+      </div>
+      <div class="pipeline-stage blue">
+        <div class="stage-num">5</div>
+        <div class="stage-name">OWASP ZAP Scan</div>
+        <div class="stage-detail">Zero HIGH findings</div>
+      </div>
+    </div>
+    <div class="pipeline-connector">&#8595; <span style="font-size:0.7rem; color:var(--text-dim);">develop + main only</span></div>
+    <div class="pipeline-row">
+      <div class="pipeline-stage yellow">
+        <div class="stage-num">6</div>
+        <div class="stage-name">Docker Build + Push</div>
+        <div class="stage-detail">Multi-stage to GHCR</div>
+      </div>
+      <div class="pipeline-stage yellow">
+        <div class="stage-num">7</div>
+        <div class="stage-name">Deploy to Staging</div>
+        <div class="stage-detail">Rolling, auto-rollback</div>
+      </div>
+      <div class="pipeline-stage yellow">
+        <div class="stage-num">8</div>
+        <div class="stage-name">Smoke Tests</div>
+        <div class="stage-detail">/health + auth + DB/Redis</div>
+      </div>
+    </div>
+    <div class="pipeline-connector">&#8595; <span style="font-size:0.7rem; color:var(--text-dim);">main only</span></div>
+    <div class="pipeline-row">
+      <div class="pipeline-stage red">
+        <div class="stage-num">9</div>
+        <div class="stage-name">Manual Approval Gate</div>
+        <div class="stage-detail">MD or CTO sign-off required</div>
+      </div>
+      <div class="pipeline-stage purple">
+        <div class="stage-num">10</div>
+        <div class="stage-name">Deploy to Production</div>
+        <div class="stage-detail">Rolling deploy + Slack notify</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 8. SECURITY CONTROLS ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">8</span> Security Controls</div>
+  <div class="security-grid">
+    <div class="sec-card">
+      <div class="sec-title">&#128274; Authentication</div>
+      <div class="sec-detail">JWT (15-min access, 7-day refresh httpOnly cookie) + bcrypt 12 rounds + TOTP 2FA + Account lockout after 10 failures</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">&#128101; Authorization</div>
+      <div class="sec-detail">RBAC (6 roles) + PostgreSQL RLS + SQL ownership checks (supplier_id in WHERE) + Least privilege per endpoint</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">&#128272; Encryption</div>
+      <div class="sec-detail">AES-256-GCM for all PII at rest (names, emails, phones, bank accounts, TINs) + TLS 1.3+ in transit</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">&#128176; Dual Auth (Payments)</div>
+      <div class="sec-detail">3-layer enforcement: Application service check + PostgreSQL CHECK constraint + Payment provider webhook verification</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">&#128736; Input Validation</div>
+      <div class="sec-detail">Joi schemas on every endpoint + XSS sanitization middleware + Parameterised SQL only (zero concatenation)</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">&#128202; Audit Trail</div>
+      <div class="sec-detail">Immutable audit_logs table (DB trigger blocks UPDATE/DELETE) + 14+ entries per invoice lifecycle + 7-year retention</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">&#128737; Rate Limiting</div>
+      <div class="sec-detail">Per-IP + per-endpoint limits + 10 login attempts / 15 min + Helmet security headers + CORS allowlist</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">&#127757; Compliance</div>
+      <div class="sec-detail">Uganda FIA AML/CTR + KYC gate before funding + Sanctions screening (10s) + SAR auto-flag at 100M UGX</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 9. 3-LAYER SAFEGUARD ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">9</span> 3-Layer Automated Safeguard System</div>
+  <div class="safeguard-layers">
+    <div class="sg-layer l1">
+      <div class="sg-badge">L1<br>BLOCK</div>
+      <div class="sg-content">
+        <div class="sg-name">Bash Guard (mms-bash-guard.sh)</div>
+        <div class="sg-desc">Hard-blocks destructive commands BEFORE execution: git push main, git push --force, DROP TABLE, rm -rf on financial dirs, cat .env secrets. Exit code 2 = denied.</div>
+      </div>
+    </div>
+    <div class="sg-layer l2">
+      <div class="sg-badge">L2<br>FLAG</div>
+      <div class="sg-content">
+        <div class="sg-name">Compliance Scanner (mms-compliance.js)</div>
+        <div class="sg-desc">Scans every file write for 12 engineering rule violations. Financial paths (payments/, pricing/, risk-engine/, approvals/, invoices/) always require manual confirmation.</div>
+      </div>
+    </div>
+    <div class="sg-layer l3">
+      <div class="sg-badge">L3<br>FIX</div>
+      <div class="sg-content">
+        <div class="sg-name">Auto-Fix (mms-auto-fix.js)</div>
+        <div class="sg-desc">Silently fixes whitespace, CRLF&#8594;LF, collapsed blank lines, EOF newlines, console.log&#8594;logger.debug, Prettier formatting. DISABLED on all financial paths.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 10. GO-LIVE CHECKLIST ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">10</span> Go-Live Readiness (8 Gates)</div>
+  <div class="checklist-grid">
+    <div class="check-card">
+      <div class="check-header">
+        <div class="check-title">&#9989; Code Quality</div>
+        <div class="check-count">8 checks</div>
+      </div>
+      <div class="check-items">TypeScript strict, ESLint clean, unit + integration tests, 80%/95% coverage, zero `any`, parameterised SQL, npm audit</div>
+    </div>
+    <div class="check-card">
+      <div class="check-header">
+        <div class="check-title">&#128451; Database</div>
+        <div class="check-count">9 checks</div>
+      </div>
+      <div class="check-items">21 migrations applied, RLS enabled, audit immutability trigger, dual-auth CHECK, indexes verified, backup strategy, WAL archiving</div>
+    </div>
+    <div class="check-card">
+      <div class="check-header">
+        <div class="check-title">&#128274; Security</div>
+        <div class="check-count">12 checks</div>
+      </div>
+      <div class="check-items">PII encryption active, JWT/bcrypt strength, TLS cert, OWASP ZAP clean, Helmet headers, CORS, rate limiting, XSS sanitization, cookie security</div>
+    </div>
+    <div class="check-card">
+      <div class="check-header">
+        <div class="check-title">&#128176; Business Logic</div>
+        <div class="check-count">18 checks</div>
+      </div>
+      <div class="check-items">5-step validation, AML flag, KYC gate, buyer confirm, risk scoring, pricing accuracy, approval matrix, dual auth (3 layers), collateral, facility limits</div>
+    </div>
+    <div class="check-card">
+      <div class="check-header">
+        <div class="check-title">&#9881; Infrastructure</div>
+        <div class="check-count">7 checks</div>
+      </div>
+      <div class="check-items">/health endpoint, Redis connectivity, 7 BullMQ workers running, graceful shutdown (30s), env vars validated, document storage, email delivery</div>
+    </div>
+    <div class="check-card">
+      <div class="check-header">
+        <div class="check-title">&#9889; Performance</div>
+        <div class="check-count">6 checks</div>
+      </div>
+      <div class="check-items">Invoice submit p95 &lt;2s, login p95 &lt;1s, DB lookup &lt;100ms, queue pickup &lt;500ms, risk scoring &lt;5s, 100 concurrent sessions</div>
+    </div>
+    <div class="check-card">
+      <div class="check-header">
+        <div class="check-title">&#128220; Compliance</div>
+        <div class="check-count">8 checks</div>
+      </div>
+      <div class="check-items">Audit trail completeness (14+ entries), SETTLEMENT_CLOSED terminal, VAT/WHT accuracy (&plusmn;1 UGX), SAR &lt;60s, DSAR &lt;2h, 7-year retention</div>
+    </div>
+    <div class="check-card">
+      <div class="check-header">
+        <div class="check-title">&#128200; Operational</div>
+        <div class="check-count">8 checks</div>
+      </div>
+      <div class="check-items">Monitoring alerts, dead letter alerts, DB replica lag, TLS expiry, RTO &lt;4h, backup restoration test, incident response plan, circuit breaker recovery</div>
+    </div>
+  </div>
+  <div style="text-align:center; margin-top:1.5rem; padding:1rem; background:var(--card); border-radius:10px; border:1px solid var(--card-border);">
+    <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:0.75rem;">Sign-Off Required From</div>
+    <div style="display:flex; justify-content:center; gap:2rem; flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-size:1.5rem;">&#128100;</div>
+        <div style="font-size:0.8rem; font-weight:600;">CTO</div>
+        <div style="font-size:0.65rem; color:var(--text-dim);">Technical</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.5rem;">&#128104;&#8205;&#128187;</div>
+        <div style="font-size:0.8rem; font-weight:600;">Lead Developer</div>
+        <div style="font-size:0.65rem; color:var(--text-dim);">Build Quality</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.5rem;">&#128221;</div>
+        <div style="font-size:0.8rem; font-weight:600;">Compliance Officer</div>
+        <div style="font-size:0.65rem; color:var(--text-dim);">Regulatory</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.5rem;">&#128181;</div>
+        <div style="font-size:0.8rem; font-weight:600;">Finance Manager</div>
+        <div style="font-size:0.65rem; color:var(--text-dim);">Payments Ops</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 11. REMAINING GAPS ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">11</span> Remaining Gaps Before Launch</div>
+  <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:0.75rem;">
+    <div style="background:var(--card); border:2px solid var(--accent6); border-radius:10px; padding:1.25rem;">
+      <div style="font-weight:700; color:var(--accent6); margin-bottom:0.5rem;">Must-Fix (Blocking)</div>
+      <ul style="font-size:0.8rem; color:var(--text-dim); padding-left:1.25rem; line-height:2;">
+        <li>Notice of Assignment PDF (stub)</li>
+        <li>Demand Letter PDF (stub)</li>
+        <li>TOTP backup codes</li>
+        <li>Payment kill switch</li>
+        <li>ACH file format support</li>
+        <li>30-day eligibility re-attempt throttle</li>
+      </ul>
+    </div>
+    <div style="background:var(--card); border:2px solid var(--accent5); border-radius:10px; padding:1.25rem;">
+      <div style="font-weight:700; color:var(--accent5); margin-bottom:0.5rem;">Should-Fix (Important)</div>
+      <ul style="font-size:0.8rem; color:var(--text-dim); padding-left:1.25rem; line-height:2;">
+        <li>New device/country login notifications</li>
+        <li>SMS on invoice submission</li>
+        <li>T+2/T+5 verification reminders</li>
+        <li>Load testing (p95 targets unverified)</li>
+        <li>Rate limiting under load verification</li>
+      </ul>
+    </div>
+    <div style="background:var(--card); border:2px solid var(--accent4); border-radius:10px; padding:1.25rem;">
+      <div style="font-weight:700; color:var(--accent4); margin-bottom:0.5rem;">Post-Launch (30 days)</div>
+      <ul style="font-size:0.8rem; color:var(--text-dim); padding-left:1.25rem; line-height:2;">
+        <li>Daily p95 latency tracking</li>
+        <li>Daily dead letter queue review</li>
+        <li>Weekly audit log reviews</li>
+        <li>Backup restoration drill</li>
+        <li>Penetration test (90 days)</li>
+        <li>JWT secret rotation (90 days)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center; padding:2rem 0; color:var(--text-dim); font-size:0.75rem;">
+  RIS Platform SDLC Overview | Generated March 2026 | Confidential
+</div>
+
+</body>
+</html>

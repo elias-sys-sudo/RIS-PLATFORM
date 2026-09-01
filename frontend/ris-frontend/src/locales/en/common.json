@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "RIS Platform",
+    "tagline": "Invoice Discounting & Early Payment"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "invoices": "Invoices",
+    "approvals": "Approvals",
+    "payments": "Payments",
+    "collections": "Collections",
+    "suppliers": "Suppliers",
+    "buyers": "Buyers",
+    "facilities": "Facilities",
+    "reporting": "Reporting",
+    "settings": "Settings",
+    "users": "Users",
+    "risk_config": "Risk Config"
+  },
+  "auth": {
+    "sign_in": "Sign in",
+    "sign_out": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "forgot_password": "Forgot your password?",
+    "reset_password": "Reset password",
+    "two_factor": "Two-factor authentication",
+    "verification_code": "Verification code"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "export": "Export",
+    "refresh": "Refresh",
+    "next": "Next",
+    "back": "Back",
+    "submit": "Submit",
+    "approve": "Approve",
+    "reject": "Reject",
+    "search": "Search"
+  },
+  "status": {
+    "loading": "Loading...",
+    "no_results": "No results found.",
+    "error": "Something went wrong.",
+    "offline": "You're offline — viewing cached data",
+    "back_online": "Back online"
+  },
+  "pagination": {
+    "page_of": "Page {{page}} of {{total}}",
+    "rows_per_page": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
+  }
+}

@@ -1,0 +1,1 @@
+Scan every route file in the backend. For each registered endpoint, extract: method, path, required auth role, request body field names, and query params supported. Write results to scripts/audit/backend-routes.json as a JSON array. After writing, print total endpoint count.

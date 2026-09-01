@@ -1,0 +1,57 @@
+{
+  "page": {
+    "title": "Invoices",
+    "detail_title": "Invoice Detail",
+    "create_title": "New Invoice"
+  },
+  "field": {
+    "invoice_number": "Invoice #",
+    "supplier": "Supplier",
+    "buyer": "Buyer",
+    "face_value": "Face Value",
+    "advance_amount": "Advance Amount",
+    "discount": "Discount",
+    "due_date": "Due Date",
+    "issue_date": "Issue Date",
+    "tenor": "Tenor",
+    "status": "Status",
+    "risk": "Risk",
+    "risk_score": "Risk Score",
+    "description": "Description",
+    "advance_percentage": "Advance Percentage"
+  },
+  "action": {
+    "new_invoice": "New Invoice",
+    "submit_invoice": "Submit Invoice",
+    "back_to_invoices": "Back to invoices"
+  },
+  "wizard": {
+    "step_buyer": "Select Buyer",
+    "step_details": "Invoice Details",
+    "step_description": "Description",
+    "step_review": "Review",
+    "step_submit": "Submit",
+    "ready_title": "Ready to submit",
+    "ready_description": "This will submit the invoice to the validation pipeline."
+  },
+  "filter": {
+    "all_statuses": "All statuses",
+    "search_placeholder": "Search by invoice number or buyer..."
+  },
+  "empty": {
+    "no_invoices": "No invoices found.",
+    "not_found": "Invoice not found."
+  },
+  "section": {
+    "parties": "Parties",
+    "details": "Details",
+    "risk_breakdown": "Risk Breakdown",
+    "status_timeline": "Status Timeline",
+    "documents": "Documents",
+    "collateral": "Collateral"
+  },
+  "aml": {
+    "flag_title": "AML Flag",
+    "flag_description": "This invoice has been flagged for exceeding the AML threshold of UGX 100,000,000."
+  }
+}

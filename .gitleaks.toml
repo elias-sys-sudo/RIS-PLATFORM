@@ -1,0 +1,73 @@
+# =============================================================================
+# .gitleaks.toml — RIS Platform secret-scanning configuration
+# =============================================================================
+#
+# Extends the default gitleaks ruleset (AWS keys, GitHub tokens, generic
+# high-entropy strings, etc.) with a project-tuned allowlist for known-safe
+# patterns. Any future addition to this allowlist MUST be reviewed: a
+# legitimate scanner finding is always a candidate for rotation, not silencing.
+
+title = "RIS Platform Gitleaks Config"
+
+[extend]
+# Use the bundled default rules — AWS, GCP, Azure, GitHub, Stripe, JWT,
+# private keys, generic high-entropy strings, etc.
+useDefault = true
+
+# =============================================================================
+# Allowlist — patterns we have audited as not-real-secrets.
+# Order: cheapest predicate first.
+# =============================================================================
+
+[allowlist]
+description = "Project-tuned allowlist for non-secret patterns"
+
+# ----------- Path-based allowlist ----------------------------------------
+# Files where placeholder credentials are legitimate documentation.
+paths = [
+  # Env templates ship with example values, no real secrets.
+  '''(^|/)\.env\.example$''',
+  '''(^|/)\.env\..*\.example$''',
+  # Markdown docs / READMEs reference example tokens for instruction.
+  '''\.md$''',
+  '''(^|/)docs/''',
+  # Test fixtures hold deterministic test values (encryption keys, JWTs).
+  '''(^|/)tests/.*\.test\.ts$''',
+  '''(^|/)tests/fixtures/''',
+  '''(^|/)tests/integration/(env-setup|global-setup|helpers)\.ts$''',
+  # Lockfile noise — npm/yarn lock entries can contain hashes that look high-entropy.
+  '''(^|/)package-lock\.json$''',
+]
+
+# ----------- Regex-based allowlist ---------------------------------------
+# Specific placeholder strings used across the repo. Each must be a
+# template/example value with zero security value.
+regexes = [
+  # JWT secret + encryption key placeholders in .env.example
+  '''your_64_hex_char_secret_here_generate_with_crypto_randombytes_32''',
+  '''your_64_hex_char_encryption_key_here_generate_with_crypto_randombytes_32''',
+  # Test-suite-wide AES key — non-random, never used in production.
+  '''aabbccddee11223344556677889900aabbccddee11223344556677889900aabb''',
+  # Test JWT secret used by tests/integration/env-setup.ts
+  '''a\]1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2''',
+  # Canonical AWS example access key (shows up in some docs/tests; not a real key)
+  '''AKIAIOSFODNN7EXAMPLE''',
+  # SendGrid sandbox test API key value
+  '''SG\.test-key-not-real''',
+]
+
+# ----------- Stopwords ---------------------------------------------------
+# Lowercase identifiers that, when matched as part of a "secret", indicate
+# a placeholder rather than a real value. Reduces false positives on
+# generic high-entropy rules.
+stopwords = [
+  "example",
+  "placeholder",
+  "your_",
+  "test_",
+  "sandbox",
+  "not-real",
+  "fake",
+  "dummy",
+  "changeme",
+]

@@ -1,0 +1,32 @@
+# Claude will not read these files/directories
+# They are build artefacts, secrets, or noise that consume context without value
+
+# Build output
+dist/
+coverage/
+coverage-all/
+coverage-collections/
+coverage-integration/
+
+# Runtime artefacts
+logs/
+uploads/documents/
+
+# Dependencies
+node_modules/
+
+# Sensitive files — never read by Claude
+.env
+.env.local
+.env.production
+*.pem
+*.key
+
+# Large binary/generated files
+*.log
+frontend/ris-frontend/node_modules/
+frontend/ris-frontend/.next/
+
+# Session and output archives (large, not useful for coding)
+02-Sessions/
+03-Output/

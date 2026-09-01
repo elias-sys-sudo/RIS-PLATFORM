@@ -1,0 +1,49 @@
+{
+  "app": {
+    "name": "RIS Platform",
+    "tagline": "Okutunda Ebiwandiiko n'Okusasula Amangu"
+  },
+  "nav": {
+    "dashboard": "Olukalala Olukulu",
+    "invoices": "Ebiwandiiko",
+    "approvals": "Okukakasa",
+    "payments": "Okusasula",
+    "collections": "Okukungaanya",
+    "suppliers": "Abalaba",
+    "buyers": "Abaguzi",
+    "facilities": "Ebyuma by'Obanka",
+    "reporting": "Lipooti",
+    "settings": "Entegeka",
+    "users": "Abakozesa",
+    "risk_config": "Entegeka y'Obulabe"
+  },
+  "auth": {
+    "sign_in": "Yingira",
+    "sign_out": "Fuluma",
+    "email": "Imeyilo",
+    "password": "Ekigambo ekyama"
+  },
+  "actions": {
+    "save": "Tereka",
+    "cancel": "Sazaamu",
+    "confirm": "Kakasa",
+    "delete": "Sangula",
+    "edit": "Kyusa",
+    "create": "Tondawo",
+    "export": "Funa koppi",
+    "refresh": "Ddamu okulaba",
+    "next": "Eddirira",
+    "back": "Emabega",
+    "submit": "Weereza",
+    "approve": "Kakasa",
+    "reject": "Gaana",
+    "search": "Noonya"
+  },
+  "status": {
+    "loading": "Ewandiikibwa...",
+    "no_results": "Tewali kibaka kiraze.",
+    "error": "Waliwo ekikyamu.",
+    "offline": "Toli ku yintaneeti — olaba data ey'okutereka",
+    "back_online": "Oddayo ku yintaneeti"
+  }
+}

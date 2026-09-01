@@ -1,0 +1,50 @@
+{
+  "page": {
+    "title": "Payments",
+    "subtitle": "Dual-authorisation payment queue",
+    "detail_title": "Payment Detail"
+  },
+  "field": {
+    "payment_id": "Payment ID",
+    "invoice": "Invoice",
+    "amount": "Amount",
+    "provider": "Provider",
+    "status": "Status",
+    "first_auth": "1st Auth",
+    "created": "Created",
+    "transaction_ref": "Transaction Ref",
+    "funded_at": "Funded At",
+    "failure_reason": "Failure Reason"
+  },
+  "status": {
+    "pending_first_auth": "1st Auth",
+    "pending_second_auth": "2nd Auth",
+    "executing": "Executing",
+    "funded": "Funded",
+    "failed": "Failed",
+    "reversed": "Reversed"
+  },
+  "section": {
+    "auth_timeline": "Authorization Timeline",
+    "references": "References",
+    "sla": "72h Payment SLA"
+  },
+  "auth": {
+    "first": "First Authorization",
+    "second": "Second Authorization",
+    "done": "Done",
+    "pending": "Pending",
+    "different_user": "Pending — requires a different user"
+  },
+  "action": {
+    "authorize": "Authorize Payment"
+  },
+  "dialog": {
+    "authorize_title": "Authorize Payment",
+    "authorize_description": "This action involves real money and cannot be undone."
+  },
+  "empty": {
+    "no_pending": "No pending payments.",
+    "not_found": "Payment not found."
+  }
+}

@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>RIS Transaction Journey</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{
+    --bg:#0b1020; --panel:#121830; --panel2:#1a2244; --line:#2a3360;
+    --text:#e7ecff; --muted:#8a96c8; --accent:#5cffd1; --accent2:#7aa2ff;
+    --warn:#ffb454; --danger:#ff6b8a; --ok:#5cffd1;
+    --pill:#243056;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,Segoe UI,Roboto,Inter,sans-serif}
+  header{padding:18px 28px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center}
+  header h1{margin:0;font-size:18px;letter-spacing:.5px}
+  header .sub{color:var(--muted);font-size:12px}
+  main{display:grid;grid-template-columns:300px 1fr;gap:20px;padding:24px;
+    min-height:calc(100vh - 220px)}
+  #actor-panel{background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:22px;display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-start;gap:14px}
+  .avatar{width:120px;height:120px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent2),var(--accent));
+    display:flex;align-items:center;justify-content:center;font-size:54px;
+    box-shadow:0 0 40px rgba(122,162,255,.35);
+    animation:pop .5s ease}
+  .actor-name{font-weight:600;font-size:15px;text-align:center}
+  .actor-role{color:var(--muted);font-size:12px;text-transform:uppercase;
+    letter-spacing:1px}
+  .actor-extra{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+  #stage-panel{background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:28px;position:relative;overflow:hidden}
+  .stage-num{color:var(--accent);font-size:12px;letter-spacing:2px;
+    font-weight:700}
+  .stage-title{font-size:28px;margin:6px 0 18px;font-weight:700}
+  .status-row{display:flex;align-items:center;gap:12px;margin-bottom:22px;
+    flex-wrap:wrap}
+  .pill{padding:6px 14px;border-radius:999px;background:var(--pill);
+    font-size:12px;font-family:ui-monospace,Menlo,monospace}
+  .pill.from{opacity:.6}
+  .pill.to{background:linear-gradient(135deg,var(--accent2),var(--accent));
+    color:#0b1020;font-weight:700}
+  .arrow{color:var(--muted)}
+  .activities{list-style:none;padding:0;margin:0 0 22px}
+  .activities li{padding:10px 14px;border-left:3px solid var(--accent2);
+    background:var(--panel2);margin-bottom:8px;border-radius:0 8px 8px 0;
+    font-size:14px;opacity:0;transform:translateX(-10px);
+    animation:slideIn .4s ease forwards}
+  .activities li:nth-child(1){animation-delay:.1s}
+  .activities li:nth-child(2){animation-delay:.25s}
+  .activities li:nth-child(3){animation-delay:.4s}
+  .activities li:nth-child(4){animation-delay:.55s}
+  .activities li:nth-child(5){animation-delay:.7s}
+  .effects{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .effect{background:#0d1428;border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px}
+  .effect .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:4px}
+  .effect .val{font-family:ui-monospace,Menlo,monospace;font-size:12px;
+    color:var(--text);word-break:break-word}
+  footer{padding:14px 24px;border-top:1px solid var(--line);background:#0a0f22}
+  #status-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
+  #status-strip .s{flex:0 0 auto;padding:6px 10px;border-radius:999px;
+    background:var(--pill);font-size:11px;color:var(--muted);
+    font-family:ui-monospace,monospace;border:1px solid transparent}
+  #status-strip .s.active{background:linear-gradient(135deg,var(--accent2),var(--accent));
+    color:#0b1020;font-weight:700;border-color:#fff2}
+  #status-strip .s.done{color:var(--text);border-color:var(--line)}
+  #controls{display:flex;align-items:center;gap:12px;padding:14px 24px;
+    background:#0a0f22;border-top:1px solid var(--line)}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+    padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+  button:hover{background:#243056}
+  #progress{flex:1;height:6px;background:var(--panel2);border-radius:99px;
+    overflow:hidden}
+  #progress > div{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));
+    transition:width .25s linear}
+  #counter{color:var(--muted);font-size:12px;font-family:ui-monospace,monospace}
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes slideIn{to{opacity:1;transform:translateX(0)}}
+  @media(max-width:780px){main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#0b1020">M</div>
+    <h1>RIS Platform — Transaction Journey</h1>
+    <div class="sub">Invoice discounting lifecycle · 14 stages · draft → settled</div>
+  </div>
+  <div class="sub">Auto-play storyboard</div>
+</header>
+
+<main>
+  <aside id="actor-panel">
+    <div class="avatar" id="avatar">👤</div>
+    <div class="actor-name" id="actor-name">—</div>
+    <div class="actor-role" id="actor-role">—</div>
+    <div class="actor-extra" id="actor-extra"></div>
+  </aside>
+
+  <section id="stage-panel">
+    <div class="stage-num" id="stage-num">STAGE 1 / 14</div>
+    <div class="stage-title" id="stage-title">—</div>
+    <div class="status-row">
+      <span class="pill from" id="status-from">—</span>
+      <span class="arrow">→</span>
+      <span class="pill to" id="status-to">—</span>
+    </div>
+    <ul class="activities" id="activities"></ul>
+    <div class="effects">
+      <div class="effect"><div class="lbl">Audit</div><div class="val" id="fx-audit">—</div></div>
+      <div class="effect"><div class="lbl">Queue</div><div class="val" id="fx-queue">—</div></div>
+      <div class="effect"><div class="lbl">Notification</div><div class="val" id="fx-notif">—</div></div>
+    </div>
+    <div id="formula-box" style="margin-top:14px;background:#070b18;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--accent);white-space:pre-wrap;display:none"></div>
+  </section>
+</main>
+
+<footer>
+  <div id="status-strip"></div>
+</footer>
+
+<div id="controls">
+  <button id="prev">⏮ Prev</button>
+  <button id="play">⏸ Pause</button>
+  <button id="next">Next ⏭</button>
+  <button id="restart">🔄 Restart</button>
+  <div id="progress"><div></div></div>
+  <div id="counter">1 / 14</div>
+</div>
+
+<script>
+const STAGES = [
+  {n:1,name:"Eligibility Check",
+   actor:"Prospective Supplier",role:"visitor",icon:"🔎",
+   extra:"Pre-registration self-check",
+   from:"visitor",to:"eligible",
+   activities:[
+     "Answers 5 gating questions (registered company, ≥1yr trading…)",
+     "Confirms authorised signatory + buyer relationship exists",
+     "Acknowledges URSB / supplier-ref / litigation consent",
+     "Pass → routed to registration; fail → ineligible screen"
+   ],
+   audit:"ELIGIBILITY_CHECK_PASSED (or _FAILED)",
+   queue:"—",
+   notif:"—"},
+
+  {n:2,name:"Supplier Registration & KYC",
+   actor:"Supplier",role:"supplier",icon:"🏭",
+   extra:"Reviewed by compliance_officer",
+   from:"new",to:"kyc_approved",
+   activities:[
+     "Submit company details (URSB, TIN, directors)",
+     "Upload 4 KYC documents (cert, tax, ID, agreement)",
+     "PII encrypted via shared/crypto.ts before INSERT",
+     "Compliance officer reviews & approves KYC"
+   ],
+   audit:"SUPPLIER_REGISTERED, KYC_SUBMITTED",
+   queue:"supplier-welcome-email",
+   notif:"Welcome email + KYC outcome"},
+
+  {n:3,name:"Invoice Submission",
+   actor:"Supplier",role:"supplier",icon:"🧾",
+   extra:"5-step validation chain",
+   from:"draft",to:"submitted",
+   activities:[
+     "Save draft → submit invoice (face value, tenor, buyer)",
+     "Validate: active, duplicate, buyer, tenor 7–90d, credit limit",
+     "AML gate: ≥100M UGX OR structuring/velocity → flag",
+     "SLA clock starts (72h to fund)"
+   ],
+   audit:"INVOICE_SUBMITTED + VALIDATION_*",
+   queue:"send-buyer-confirmation",
+   notif:"Buyer email w/ Notice of Assignment",
+   formula:"tenor = ceil((dueDate − now) / 86_400_000 ms)\n7 ≤ tenor ≤ 90    ·    used + face ≤ approvedLimit\nAML if face ≥ 100_000_000 UGX\nstructuring if 30-day rolling sum ≥ 100M & each < 100M\nvelocity if currentMonth ≥ 3 × 6-month avg"},
+
+  {n:4,name:"Buyer Confirmation",
+   actor:"Buyer",role:"buyer",icon:"🏢",
+   extra:"48h single-use token",
+   from:"submitted",to:"buyer_confirmed",
+   activities:[
+     "Buyer clicks confirmation link (token = SHA-256 hash)",
+     "Timing-safe compare; 48h expiry; single-use",
+     "Buyer acknowledges 4 obligations (assignment, payment…)",
+     "RIS bank details displayed (Stanbic Uganda)"
+   ],
+   audit:"BUYER_CONFIRMED",
+   queue:"score-invoice → risk-engine",
+   notif:"—"},
+
+  {n:5,name:"Risk Scoring",
+   actor:"Risk Engine",role:"system worker",icon:"🧠",
+   extra:"5-factor weighted model",
+   from:"buyer_confirmed",to:"scored",
+   activities:[
+     "Buyer credit (.30) + supplier track (.25) + collateral (.20)",
+     "Concentration (.15) + tenor (.10) → composite 0–100",
+     "≥75 AUTO · 50–74 REFER · <50 REJECT",
+     "BigInt portfolio totals; configurable thresholds"
+   ],
+   audit:"INVOICE_SCORED + factor breakdown",
+   queue:"price-invoice (or invoice-rejected)",
+   notif:"Rejection email if score < 50",
+   formula:"finalScore = Σ(rawScore × weight)\nweights: buyer .30 · track .25 · collateral .20 · concentration .15 · tenor .10\n≥75 → AUTO    50–74 → REFER    <50 → REJECT\nmaxAdvance: ≥75→95% · 60–74→90% · 50–59→85%"},
+
+  {n:6,name:"Pricing",
+   actor:"Pricing Worker",role:"system worker",icon:"💱",
+   extra:"BigInt · PRECISION 1e8",
+   from:"scored",to:"priced",
+   activities:[
+     "Rate = bank_cost + risk_premium + mms_margin",
+     "Discount = face × rate × (tenor/365)",
+     "Net to supplier = advance − discount",
+     "Rate cap ≤ 30% enforced"
+   ],
+   audit:"INVOICE_PRICED (advance, discount, net)",
+   queue:"prepare-approval",
+   notif:"—",
+   formula:"PRECISION = 1e8    DAYS_PER_YEAR = 365\ndiscountRate = (bankRate + riskRate + mmsRate) × tenor/365\nadvance     = face × maxAdvancePct\ndiscount    = face × discountRate\nnetPayment  = advance − discount\nbankCost    = advance × bankRate × tenor/365\nmmsProfit   = discount − bankCost\nrate cap: totalAnnualRate ≤ 15%"},
+
+  {n:7,name:"Approvals (3-tier matrix)",
+   actor:"Credit Officer / Mgmt",role:"credit_officer",icon:"✅",
+   extra:"FOR UPDATE NOWAIT lock",
+   from:"priced",to:"approved",
+   activities:[
+     "AUTO <10M & score≥75 (system approves)",
+     "TIER-2 10–50M → 1 credit_officer",
+     "TIER-3 >50M → 2 different officers (quorum)",
+     "TIER-4 >200M → 2 management; 24h SLA escalation"
+   ],
+   audit:"APPROVAL_RECORDED (tier, decision)",
+   queue:"initiate-payment (after quorum)",
+   notif:"Approval / rejection to supplier",
+   formula:"AUTO   : face < 10M  & score ≥ 75 & !aml\nTIER-2 : face ≥ 10M  OR score 50–75 OR aml_flagged\nTIER-3 : face > 50M  OR score < 50   (2 different officers)\nTIER-4 : face > 200M OR score < 30   (board)\nSLA: hours_since_scored ≥ 24 → escalate"},
+
+  {n:8,name:"Payment Initiation",
+   actor:"Finance Manager",role:"finance_manager",icon:"💼",
+   extra:"Idempotency key required",
+   from:"approved",to:"pending_first_auth",
+   activities:[
+     "Kill-switch + facility liquidity check",
+     "Collateral coverage ≥ 50% of advance",
+     "AML must be cleared by compliance",
+     "Provider chosen: MTN MoMo / Airtel / EFT"
+   ],
+   audit:"PAYMENT_CREATED",
+   queue:"—",
+   notif:"—",
+   formula:"coverage = totalCollateral / advance\nif coverage < 0.50 → reject\nif kill_switch === 'true' → block all\nif (now − last_2fa) > 60 min → reject"},
+
+  {n:9,name:"Dual Authorisation",
+   actor:"2× Finance Manager",role:"finance_manager",icon:"🔐",
+   extra:"3 layers: app · DB trigger · provider",
+   from:"pending_first_auth",to:"executing",
+   activities:[
+     "First auth: 2FA <15min, business hours flag",
+     "Second auth: must be DIFFERENT user",
+     "DB trigger enforces user1 ≠ user2",
+     "Provider call dispatched after both auths"
+   ],
+   audit:"PAYMENT_FIRST_AUTH → PAYMENT_SECOND_AUTH",
+   queue:"provider disbursement call",
+   notif:"—",
+   formula:"if dual_auth_user_1 === userId → reject SAME_AUTHORISER\nDB trigger: BEFORE UPDATE → raise if user1 = user2\nSLA: hours_pending ≥ 72 → escalate to MD"},
+
+  {n:10,name:"Provider Disbursement",
+   actor:"MTN MoMo / Airtel / EFT",role:"external provider",icon:"📡",
+   extra:"HMAC webhook · 3 retries",
+   from:"executing",to:"funded",
+   activities:[
+     "Provider sends UGX to supplier bank/wallet",
+     "Webhook verified (HMAC-SHA256, timing-safe)",
+     "Webhook event recorded BEFORE processing (idempotent)",
+     "Failure → status=failed, exponential retry 30s/120s/480s"
+   ],
+   audit:"PAYMENT_FUNDED (or PAYMENT_FAILED)",
+   queue:"auto-drawdown-facility, initiate-settlement",
+   notif:"Supplier payment confirmation"},
+
+  {n:11,name:"Collections",
+   actor:"Scheduled Job + Buyer",role:"system + buyer",icon:"⏰",
+   extra:"Penalty BigInt · SAR trigger",
+   from:"funded",to:"collecting",
+   activities:[
+     "T+0 funded → collecting; T+1 past-due → overdue",
+     "Penalty = face × daily_rate × days (BigInt)",
+     "Escalation L1(T+3) L2(T+7) L3(T+14 legal)",
+     "SAR if L≥3 & ≥100M → FIA Uganda filing"
+   ],
+   audit:"INVOICE_OVERDUE, COLLECTION_ESCALATED",
+   queue:"escalation-reminder, sar-review-required",
+   notif:"Buyer SMS/email reminders",
+   formula:"PENALTY_PRECISION = 1e6    daily rate = 0.001 (0.1%/day)\npenalty = (face × rateScaled × daysOverdue) / PENALTY_PRECISION\nescalation: ≥3d→L1  ≥7d→L2  ≥14d→L3 (legal)\nSAR if level ≥ 3 AND face ≥ 100M"},
+
+  {n:12,name:"Buyer Pays",
+   actor:"Buyer",role:"buyer",icon:"💸",
+   extra:"Recourse to supplier if defaulted",
+   from:"collecting",to:"collected",
+   activities:[
+     "Buyer wires face value (+ penalty if overdue)",
+     "Collections.recordPayment validates amount",
+     "Status → collected; or → defaulted if no payment",
+     "On default: full recourse against supplier"
+   ],
+   audit:"COLLECTION_RECEIVED",
+   queue:"facility-repayment-trigger",
+   notif:"—"},
+
+  {n:13,name:"Settlement",
+   actor:"Finance Mgr → Management",role:"finance_manager + management",icon:"📒",
+   extra:"profit_bookings IMMUTABLE",
+   from:"collected",to:"settled",
+   activities:[
+     "pending → facility_repaid → profit_booked → closed",
+     "Repay bank facility (principal + interest)",
+     "Net profit = discount − bank_cost + penalty (BigInt)",
+     "DB trigger blocks UPDATE/DELETE on profit_bookings"
+   ],
+   audit:"SETTLEMENT_INITIATED → CLOSED",
+   queue:"settlement-complete",
+   notif:"Supplier final settlement notice",
+   formula:"netProfit = discountEarned − bankCostPaid + penaltyIncome\ndailyInterest = principal × annualRate / 365   (RATE_PRECISION 1e9)\nutilisation% = drawn × 100 / totalLimit\nstate: pending → facility_repaid → profit_booked → closed"},
+
+  {n:14,name:"Reporting & Audit Trail",
+   actor:"Auditor / Management",role:"auditor",icon:"📊",
+   extra:"audit_logs is source of truth",
+   from:"settled",to:"settled",
+   activities:[
+     "Every state change wrote audit_log inside its txn",
+     "PII stored as ciphertext; IDs only in logs",
+     "Dashboards: SLA breaches, aging, profit, AML",
+     "Compliance reports: rejections, escalations, SARs"
+   ],
+   audit:"(read-only — full timeline)",
+   queue:"—",
+   notif:"—"}
+];
+
+const STATUSES = ["draft","submitted","buyer_confirmed","scored","priced","approved",
+  "pending_first_auth","pending_second_auth","executing","funded","collecting","collected","settled"];
+
+const $ = id => document.getElementById(id);
+let idx = 0, playing = true, timer = null, progress = 0;
+const STAGE_MS = 6500;
+const TICK = 50;
+
+function renderStrip(){
+  const strip = $("status-strip");
+  strip.innerHTML = "";
+  STATUSES.forEach((s,i)=>{
+    const el = document.createElement("div");
+    el.className = "s";
+    el.textContent = s;
+    strip.appendChild(el);
+  });
+}
+
+function highlightStrip(){
+  const cur = STAGES[idx].to;
+  [...$("status-strip").children].forEach((el,i)=>{
+    el.classList.remove("active","done");
+    const stIdx = STATUSES.indexOf(cur);
+    if(i === stIdx) el.classList.add("active");
+    else if(i < stIdx) el.classList.add("done");
+  });
+}
+
+function render(){
+  const s = STAGES[idx];
+  $("stage-num").textContent = `STAGE ${s.n} / ${STAGES.length}`;
+  $("stage-title").textContent = s.name;
+  $("status-from").textContent = s.from;
+  $("status-to").textContent = s.to;
+  $("avatar").textContent = s.icon;
+  // restart pop animation
+  $("avatar").style.animation = "none"; void $("avatar").offsetWidth;
+  $("avatar").style.animation = "";
+  $("actor-name").textContent = s.actor;
+  $("actor-role").textContent = s.role;
+  $("actor-extra").textContent = s.extra || "";
+  const ul = $("activities");
+  ul.innerHTML = "";
+  s.activities.forEach(a=>{
+    const li = document.createElement("li");
+    li.textContent = a;
+    ul.appendChild(li);
+  });
+  $("fx-audit").textContent = s.audit;
+  $("fx-queue").textContent = s.queue;
+  $("fx-notif").textContent = s.notif;
+  const fb = $("formula-box");
+  if(s.formula){ fb.textContent = s.formula; fb.style.display = "block"; }
+  else { fb.style.display = "none"; }
+  $("counter").textContent = `${idx+1} / ${STAGES.length}`;
+  highlightStrip();
+}
+
+function tick(){
+  if(!playing) return;
+  progress += TICK;
+  $("progress").firstElementChild.style.width = (progress/STAGE_MS*100)+"%";
+  if(progress >= STAGE_MS){
+    progress = 0;
+    idx = (idx + 1) % STAGES.length;
+    render();
+  }
+}
+
+function setPlaying(p){
+  playing = p;
+  $("play").textContent = p ? "⏸ Pause" : "▶ Play";
+}
+
+$("next").onclick = ()=>{ progress=0; idx=(idx+1)%STAGES.length; render(); };
+$("prev").onclick = ()=>{ progress=0; idx=(idx-1+STAGES.length)%STAGES.length; render(); };
+$("play").onclick = ()=> setPlaying(!playing);
+$("restart").onclick = ()=>{ progress=0; idx=0; render(); setPlaying(true); };
+
+renderStrip();
+render();
+timer = setInterval(tick, TICK);
+</script>
+</body>
+</html>

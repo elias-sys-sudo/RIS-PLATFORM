@@ -1,0 +1,20 @@
+# Force LF line endings for shell scripts and Docker-related files.
+# Windows developers can still check out with CRLF for their editors,
+# but these files must run on Linux and break with \r\n.
+*.sh          text eol=lf
+Dockerfile    text eol=lf
+*.Dockerfile  text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+.env.*        text eol=lf
+
+# Pin LF for TS/JS sources too. Prettier config has endOfLine: "lf" and CI
+# runs `prettier --check` on Linux. Without this, Windows devs with
+# core.autocrlf=true introduce CRLF silently, breaking Stage 1 of the pipeline.
+*.ts          text eol=lf
+*.tsx         text eol=lf
+*.js          text eol=lf
+*.jsx         text eol=lf
+*.json        text eol=lf
+*.sql         text eol=lf
+*.md          text eol=lf

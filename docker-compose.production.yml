@@ -1,0 +1,279 @@
+# =============================================================================
+# RIS Platform — Production Docker Compose (Oracle Server)
+# Services: nginx (reverse proxy), api (Node.js), frontend (React),
+#           postgres (database), redis (cache/queue)
+# =============================================================================
+#
+# Usage:
+#   cp .env.production .env
+#   docker compose -f docker-compose.production.yml up -d --build
+#
+# =============================================================================
+
+services:
+  # ── Reverse Proxy + TLS termination ────────────────────────────────────────
+  # nginx is the only service that touches public traffic. It owns:
+  #   - Port 80  → ACME HTTP-01 challenge + 301 to HTTPS
+  #   - Port 443 → TLS termination (cert from certbot sidecar) → upstreams
+  #
+  # The :default.conf is rendered from the template at container start so that
+  # ${STAGING_DOMAIN} resolves to the live domain (set in .env). envsubst lives
+  # in nginx:alpine's perl-less base image; we use a tiny entry wrapper.
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ris-nginx
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_TLS_PORT:-443}:443"
+    environment:
+      # Read by the entrypoint envsubst that renders default.conf.
+      STAGING_DOMAIN: ${STAGING_DOMAIN:-staging.raphaintegrated.com}
+    volumes:
+      # Template (with ${STAGING_DOMAIN} placeholders), not the final config.
+      - ./deploy/nginx/nginx.conf:/etc/nginx/templates/default.conf.template:ro
+      - ./deploy/nginx/proxy_params.conf:/etc/nginx/proxy_params.conf:ro
+      # Init script: runs at container start (after 20-envsubst-on-templates).
+      # Writes a 24h self-signed dummy cert if no real Let's Encrypt cert
+      # exists yet — without this, the very first `up` after this PR
+      # crashes because nginx refuses to load a non-existent ssl_certificate.
+      # Get-cert.sh replaces the dummy with the real cert and force-recreates
+      # the nginx container.
+      - ./deploy/nginx/30-ensure-cert.sh:/docker-entrypoint.d/30-ensure-cert.sh:ro
+      - nginx_logs:/var/log/nginx
+      # TLS: certbot writes here; nginx reads. ensure-cert.sh ALSO writes here
+      # if the dir is empty — so the mount can't be :ro at the compose level.
+      # Cert store integrity is enforced by certbot's own file permissions
+      # (privkey is mode 600, owner root).
+      - letsencrypt:/etc/letsencrypt
+      # ACME webroot challenge dir — certbot writes tokens, nginx serves them
+      # over :80 so Let's Encrypt servers can read them during renewal.
+      - certbot_webroot:/var/www/certbot:ro
+    depends_on:
+      ris-api:
+        condition: service_healthy
+      ris-frontend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ris-network
+
+  # ── Certbot — Let's Encrypt sidecar for cert renewal ───────────────────────
+  # Loop: sleep 12h, run `certbot renew --webroot`. Let's Encrypt only renews
+  # certs that are <30 days from expiry, so most loops are no-ops. After a
+  # real renewal, the new cert is written to /etc/letsencrypt/live/...
+  # nginx is NOT auto-reloaded (would require docker socket → container-escape
+  # surface). Instead, nginx picks up the new cert on the next Stage 6b
+  # deploy. Since develop sees pushes ≥ weekly and certs live 90 days,
+  # nginx's view is always ≤ 60 days from renewal. Documented trade-off in
+  # deploy/tls-setup-runbook.md ("Renewal reload strategy").
+  #
+  # First-time cert acquisition is NOT done by this container — it requires
+  # nginx to be down so certbot's standalone mode can bind :80. One-shot
+  # script: deploy/get-cert.sh.
+  certbot:
+    image: certbot/certbot:v2.11.0
+    container_name: ris-certbot
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    entrypoint: /bin/sh
+    command: >
+      -c "trap exit TERM;
+          while :; do
+            certbot renew --webroot --webroot-path /var/www/certbot --quiet || true;
+            sleep 12h & wait $${!};
+          done"
+    restart: unless-stopped
+    networks:
+      - ris-network
+
+  # ── Backend API ────────────────────────────────────────────────────────────
+  ris-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ris-api
+    env_file: .env
+    environment:
+      # Set to 'staging' (not 'production') so mock payment providers are
+      # registered. Switch back to 'production' once .env contains real
+      # EFT_* credentials (see registry.ts). Mobile-money providers
+      # (MTN MoMo, Airtel) have been retired — EFT is the only real channel.
+      NODE_ENV: ${API_NODE_ENV:-staging}
+      PORT: "4000"
+      # DATABASE_URL hardcoded to match the actual ris-postgres credentials
+      # (ris_user / ris_platform). Substituting from .env caused startup
+      # failures when stale mms_* values lingered there. Override via
+      # API_DATABASE_URL if you need a different DSN.
+      DATABASE_URL: ${API_DATABASE_URL:-postgresql://ris_user:ris_dev_password@ris-postgres:5432/ris_platform}
+      REDIS_URL: redis://ris-redis:6379
+      # Auth rate limit: tuned for UAT — only FAILED login attempts count
+      # (skipSuccessfulRequests in security.ts). Hardcoded literals here so
+      # `environment:` overrides the lower default in `.env`. In real
+      # production switch back to 10/900000 (matches .env.example default).
+      RATE_LIMIT_AUTH_MAX: "30"
+      RATE_LIMIT_AUTH_WINDOW_MS: "900000"
+    volumes:
+      - api_uploads:/app/uploads
+      - api_eft_output:/app/eft-output
+      - api_logs:/app/logs
+    depends_on:
+      ris-postgres:
+        condition: service_healthy
+      ris-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ris-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+
+  # ── Frontend ───────────────────────────────────────────────────────────────
+  ris-frontend:
+    build:
+      context: ./frontend/ris-frontend
+      dockerfile: Dockerfile
+      args:
+        # Render the "Demo accounts" panel on the login page in non-production
+        # stacks (dev / staging / UAT). Override to 'false' in real production.
+        VITE_SHOW_DEMO_ACCOUNTS: ${VITE_SHOW_DEMO_ACCOUNTS:-true}
+    container_name: ris-frontend
+    restart: unless-stopped
+    networks:
+      - ris-network
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  ris-postgres:
+    # Bumped from 15-alpine to 16-alpine to match the actual on-disk data
+    # format. The persistent volume was last initialised by 16-alpine; pinning
+    # to 15 here would refuse to start with "incompatible PG_VERSION".
+    image: postgres:16-alpine
+    container_name: ris-postgres
+    environment:
+      # Defaults match what's actually in the persistent volume so even if
+      # .env drifts, the container starts. Postgres only honours these on
+      # FIRST init — once pgdata exists, env values are validated against
+      # what's stored, so the defaults must match the on-disk creds.
+      POSTGRES_DB: ${POSTGRES_DB:-ris_platform}
+      POSTGRES_USER: ${POSTGRES_USER:-ris_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ris_dev_password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./deploy/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: >
+      postgres
+        -c shared_preload_libraries='pg_stat_statements'
+        -c log_statement=mod
+        -c log_min_duration_statement=500
+        -c max_connections=100
+        -c shared_buffers=256MB
+        -c effective_cache_size=512MB
+        -c work_mem=4MB
+        -c maintenance_work_mem=64MB
+        -c wal_level=replica
+        -c max_wal_size=1GB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ris_user} -d ${POSTGRES_DB:-ris_production}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - ris-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+          cpus: "0.5"
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  ris-redis:
+    image: redis:7-alpine
+    container_name: ris-redis
+    command: >
+      redis-server
+        --maxmemory 128mb
+        --maxmemory-policy allkeys-lru
+        --appendonly yes
+        --appendfsync everysec
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - ris-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+
+  # ── Database Migrations (run once, then exit) ──────────────────────────────
+  ris-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ris-migrate
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      # Same hardcoded DSN as ris-api — prevents stale .env values from
+      # breaking migrations. Override via API_DATABASE_URL if needed.
+      DATABASE_URL: ${API_DATABASE_URL:-postgresql://ris_user:ris_dev_password@ris-postgres:5432/ris_platform}
+    command: ["node", "dist/shared/database/migrations/run.js"]
+    depends_on:
+      ris-postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - ris-network
+
+volumes:
+  # Bound by `name:` to the legacy mms-platform-labelled volume so the
+  # existing seed data (suppliers, buyers, invoices, audit log, KYC docs)
+  # is preserved when postgres is recreated under the ris-platform compose
+  # project. Without this, compose would create a fresh empty
+  # ris-platform_pgdata volume and you'd lose state on every recreate.
+  pgdata:
+    name: mms-platform_ris-pgdata
+    external: true
+  redisdata:
+    driver: local
+  api_uploads:
+    driver: local
+  api_eft_output:
+    driver: local
+  api_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+  # TLS cert store (Let's Encrypt). Persists across container recreates so a
+  # `docker compose down && up` doesn't trigger a fresh cert request (Let's
+  # Encrypt has a 5-failures-per-hour rate limit per domain that's easy to
+  # trip during debugging).
+  letsencrypt:
+    driver: local
+  # ACME HTTP-01 challenge webroot. Shared read-write between certbot (writes
+  # the token files) and nginx (serves them over :80 to Let's Encrypt's
+  # validation servers).
+  certbot_webroot:
+    driver: local
+
+networks:
+  ris-network:
+    driver: bridge

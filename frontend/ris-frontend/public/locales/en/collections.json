@@ -1,0 +1,63 @@
+{
+  "page": {
+    "title": "Collections",
+    "subtitle": "Track and manage invoice collections",
+    "detail_title": "Collection Detail"
+  },
+  "field": {
+    "invoice_number": "Invoice #",
+    "buyer": "Buyer",
+    "face_value": "Face Value",
+    "outstanding": "Outstanding",
+    "collected": "Collected",
+    "due_date": "Due Date",
+    "days_overdue": "Days Overdue",
+    "escalation": "Escalation",
+    "status": "Status",
+    "method": "Method",
+    "reference": "Reference",
+    "balance": "Balance",
+    "paid_by": "Paid By",
+    "payment_date": "Payment Date",
+    "notes": "Notes"
+  },
+  "stat": {
+    "outstanding": "Outstanding",
+    "overdue": "Overdue",
+    "avg_days_overdue": "Avg Days Overdue",
+    "collection_rate": "Collection Rate"
+  },
+  "action": {
+    "record_payment": "Record Payment",
+    "escalate": "Escalate",
+    "de_escalate": "De-escalate",
+    "resolve": "Resolve"
+  },
+  "section": {
+    "buyer_contact": "Buyer Contact",
+    "payment_history": "Payment History",
+    "escalation_history": "Escalation History"
+  },
+  "dialog": {
+    "record_title": "Record Payment",
+    "escalate_title": "Escalate Collection",
+    "escalate_placeholder": "Reason for escalation (required)...",
+    "deescalate_title": "De-escalate",
+    "deescalate_description": "Lower the escalation level for this collection.",
+    "resolve_title": "Resolve Collection",
+    "resolve_description": "Mark this collection as resolved. Outstanding balance must be zero."
+  },
+  "method": {
+    "mtn_momo": "MTN Mobile Money",
+    "airtel_money": "Airtel Money",
+    "bank_transfer": "Bank Transfer",
+    "cash": "Cash",
+    "cheque": "Cheque"
+  },
+  "empty": {
+    "no_collections": "No collections found.",
+    "no_payments": "No payments recorded.",
+    "no_escalations": "No escalations.",
+    "not_found": "Collection not found."
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "page": {
+    "users_title": "User Management",
+    "risk_config_title": "Risk Configuration",
+    "risk_config_subtitle": "Adjust risk engine parameters"
+  },
+  "users": {
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "last_login": "Last Login",
+    "never": "Never",
+    "create_title": "Create User",
+    "create_action": "Create User"
+  },
+  "risk_config": {
+    "category_weight": "Risk Weights",
+    "category_threshold": "Thresholds",
+    "category_limit": "Limits",
+    "category_rate": "Rates"
+  },
+  "success": {
+    "user_created": "User created. Temp password: {{password}}",
+    "user_updated": "User updated",
+    "config_updated": "Config updated"
+  }
+}

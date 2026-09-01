@@ -1,0 +1,256 @@
+{
+  "_about": "End-to-end mock transaction #2 for RIS — eligibility through settlement. Different supplier/buyer/numbers from sample-transaction.json so you can run a parallel demo. All UGX in BIGINT (whole shillings). Numbers verified against the actual formulas.",
+
+  "actors": {
+    "supplier":       { "id": "sup_02JINJAFRESH", "email": "finance@jinjafresh.co.ug", "role": "supplier" },
+    "buyer":          { "id": "byr_02UMEME",      "name_enc": "Umeme Limited",          "credit_rating": "B+", "approved_limit": 300000000, "used_limit": 80000000 },
+    "credit_officer": { "id": "usr_co_kato",      "email": "kato@ris.ug",               "role": "credit_officer" },
+    "finance_mgr_1":  { "id": "usr_fm_lillian",   "email": "lillian@ris.ug",            "role": "finance_manager" },
+    "finance_mgr_2":  { "id": "usr_fm_brian",     "email": "brian@ris.ug",              "role": "finance_manager" },
+    "compliance":     { "id": "usr_co_sandra",    "email": "sandra@ris.ug",             "role": "compliance_officer" },
+    "management":     { "id": "usr_mg_isaac",     "email": "isaac@ris.ug",              "role": "management" }
+  },
+
+  "stage_01_eligibility": {
+    "submitted_at": "2026-04-08T09:30:00Z",
+    "answers": {
+      "is_registered_company": true,
+      "is_authorized_signatory": true,
+      "years_in_business": 4,
+      "annual_revenue": 180000000,
+      "has_buyer_relationships": true,
+      "consents": { "ursb": true, "supplier_refs": true, "litigation": true }
+    },
+    "result": "ELIGIBILITY_CHECK_PASSED",
+    "session_token": "elig_1712567400_h7k2nqr9"
+  },
+
+  "stage_02_registration": {
+    "supplier_id": "sup_02JINJAFRESH",
+    "company_name": "Jinja Fresh Produce Ltd",
+    "registration_number": "URSB-91245-2022",
+    "industry": "Agribusiness — Fresh Produce Export",
+    "company_address": "Plot 17, Nile Crescent, Jinja, Uganda",
+    "tin": "1001456789",
+    "contact_person_name": "Patricia Nabirye",
+    "contact_email": "patricia.nabirye@jinjafresh.co.ug",
+    "contact_phone": "+256772889001",
+    "password": "Jinja!Fresh2026",
+    "bank": { "name": "Centenary Bank", "account": "3201009988765", "branch": "Jinja Main" },
+    "preferred_payment_method": "MTN_MOMO",
+    "mobile_money_number": "+256772889001",
+    "consents": { "ursb_verification": true, "litigation_screening": true, "contact_references": true }
+  },
+
+  "stage_03_kyc": {
+    "documents": [
+      { "type": "cert_incorporation", "status": "uploaded", "uploaded_at": "2026-04-08T10:05:00Z" },
+      { "type": "tax_registration",   "status": "uploaded", "uploaded_at": "2026-04-08T10:06:00Z" },
+      { "type": "director_id",        "status": "uploaded", "uploaded_at": "2026-04-08T10:07:00Z" },
+      { "type": "signed_agreement",   "status": "uploaded", "uploaded_at": "2026-04-08T10:08:00Z" },
+      { "type": "bank_statement_6m",  "status": "uploaded", "uploaded_at": "2026-04-08T10:09:00Z" }
+    ],
+    "sanctions_screening": "CLEAR",
+    "kyc_status": "approved",
+    "approved_by": "usr_co_sandra",
+    "approved_at": "2026-04-09T11:30:00Z"
+  },
+
+  "stage_04_invoice_submission": {
+    "invoice_id": "inv_02JINJA001",
+    "invoice_number": "JFP-2026-0117",
+    "buyer_id": "byr_02UMEME",
+    "face_value": 30000000,
+    "currency": "UGX",
+    "issue_date": "2026-04-10",
+    "due_date": "2026-05-25",
+    "tenor_days": 45,
+    "description": "Supply of fresh pineapples and matoke for Q2 2026 cafeteria contract",
+    "validation_chain": {
+      "step1_supplier_active":  "PASS",
+      "step2_duplicate":        "PASS",
+      "step3_buyer_eligible":   "PASS",
+      "step4_tenor_in_range":   "PASS  (7 ≤ 45 ≤ 90)",
+      "step5_credit_limit":     "PASS  (80M + 30M = 110M ≤ 300M)"
+    },
+    "aml": { "flagged": false, "structuring": false, "velocity_spike": false, "note": "face 30M < 100M threshold" },
+    "status": "submitted",
+    "sla_deadline": "2026-04-13T09:30:00Z"
+  },
+
+  "stage_05_buyer_confirmation": {
+    "verification_token_hash": "sha256:4d8f…a921",
+    "expires_at": "2026-04-12T09:30:00Z",
+    "confirmed_at": "2026-04-10T16:45:00Z",
+    "confirmed_by_ip": "41.210.x.x",
+    "acknowledgements": {
+      "notice_of_assignment": true,
+      "payment_to_mms_only":  true,
+      "no_offset":            true,
+      "binding_obligation":   true
+    },
+    "status": "buyer_confirmed"
+  },
+
+  "stage_06_risk_scoring": {
+    "factors": {
+      "buyer_credit":          { "weight": 0.30, "raw":  80, "weighted": 24.00, "note": "rating B+ (utility, stable)" },
+      "supplier_track_record": { "weight": 0.25, "raw":  60, "weighted": 15.00, "note": "3 prior invoices, 100% on-time but thin history" },
+      "collateral":            { "weight": 0.20, "raw":  75, "weighted": 15.00, "note": "assignment of receivable" },
+      "concentration_risk":    { "weight": 0.15, "raw":  85, "weighted": 12.75, "note": "buyer 18% of portfolio" },
+      "tenor":                 { "weight": 0.10, "raw":  85, "weighted":  8.50, "note": "45d band — favourable" }
+    },
+    "composite_score": 75,
+    "recommendation": "MANUAL_REVIEW",
+    "max_advance_pct": 0.90,
+    "risk_premium_rate": 0.010,
+    "status": "scored"
+  },
+
+  "stage_07_pricing": {
+    "facility_id": "fac_02CENTBANK",
+    "rates": { "bank_cost_rate": 0.12, "risk_premium_rate": 0.010, "mms_margin_rate": 0.025 },
+    "total_annual_rate": 0.155,
+    "rate_cap_check": "FAIL_THEN_OVERRIDE  (0.155 > 0.15) — management override applied, capped at 0.15",
+    "effective_annual_rate": 0.150,
+    "discount_rate": 0.018493,
+    "computed": {
+      "advance_amount":          27000000,
+      "discount_amount":           554795,
+      "net_payment_to_supplier": 26445205,
+      "bank_cost_amount":          399452,
+      "mms_net_profit":            155343
+    },
+    "_formula_walkthrough": [
+      "discountRate     = 0.150 × 45/365            = 0.018493",
+      "advance          = 30_000_000 × 0.90         = 27_000_000",
+      "discount         = 30_000_000 × 0.018493     =    554_795",
+      "net_to_supplier  = 27_000_000 − 554_795      = 26_445_205",
+      "bank_cost        = 27_000_000 × 0.12 × 45/365=    399_452",
+      "mms_profit       =    554_795 − 399_452      =    155_343"
+    ],
+    "status": "priced"
+  },
+
+  "stage_08_approvals": {
+    "tier": "TIER_1",
+    "_tier_logic": "face 30M ≥ 10M AND ≤ 50M AND score < 80 → credit_officer review (TIER_1 manual)",
+    "approval_1": {
+      "user_id": "usr_co_kato",
+      "decision": "APPROVED",
+      "comment": "Thin track record offset by clean validation, B+ buyer, conservative 90% advance. Approve.",
+      "decided_at": "2026-04-11T08:20:00Z"
+    },
+    "status": "approved"
+  },
+
+  "stage_09_payment_initiation": {
+    "payment_id": "pay_02JINJA001",
+    "idempotency_key": "ik_jinja_inv117_v1",
+    "amount": 27000000,
+    "method": "MTN_MOMO",
+    "checks": {
+      "kill_switch":              "off",
+      "collateral_coverage_ratio": 0.71,
+      "collateral_check":          "PASS  (0.71 ≥ 0.50)",
+      "facility_liquidity":        "PASS  (available 220M ≥ 27M)",
+      "aml_cleared":               "n/a (not flagged)"
+    },
+    "status": "pending_first_auth"
+  },
+
+  "stage_10_dual_authorisation": {
+    "first_auth": {
+      "user_id": "usr_fm_lillian",
+      "twofa_verified_minutes_ago": 3,
+      "business_hours": true,
+      "at": "2026-04-11T09:05:00Z"
+    },
+    "second_auth": {
+      "user_id": "usr_fm_brian",
+      "twofa_verified_minutes_ago": 1,
+      "different_user_check": "PASS  (lillian ≠ brian)",
+      "db_trigger_check":     "PASS",
+      "at": "2026-04-11T09:08:00Z"
+    },
+    "status_after": "executing"
+  },
+
+  "stage_11_provider_disbursement": {
+    "provider": "MTN_MOMO",
+    "external_ref": "MTNMM-7E4D-2A91",
+    "webhook": {
+      "received_at": "2026-04-11T09:09:33Z",
+      "signature_valid": true,
+      "idempotent": true,
+      "status_code": "SUCCESS"
+    },
+    "credited_to_supplier": 26445205,
+    "status": "funded"
+  },
+
+  "stage_12_collections_with_overdue": {
+    "due_date": "2026-05-25",
+    "buyer_paid_at": "2026-05-30T14:20:00Z",
+    "days_overdue": 5,
+    "daily_penalty_rate": 0.001,
+    "penalty_calc": "30_000_000 × 0.001 × 5 = 150_000",
+    "penalty": 150000,
+    "amount_received": 30150000,
+    "escalation_level": 1,
+    "sar_flag": false,
+    "reminders_sent": [
+      { "type": "T-7_courtesy", "sent_at": "2026-05-18T08:00:00Z" },
+      { "type": "T-1_due_tomorrow", "sent_at": "2026-05-24T08:00:00Z" },
+      { "type": "T+1_overdue", "sent_at": "2026-05-26T08:00:00Z" },
+      { "type": "T+3_escalation_1", "sent_at": "2026-05-28T08:00:00Z" }
+    ],
+    "status": "collected"
+  },
+
+  "stage_13_settlement": {
+    "settlement_id": "set_02JINJA001",
+    "facility_repayment": {
+      "principal_repaid": 27000000,
+      "interest_paid":      399452,
+      "total_to_bank":    27399452
+    },
+    "buyer_payment_received": 30150000,
+    "discount_earned":         554795,
+    "bank_cost_paid":          399452,
+    "penalty_income":          150000,
+    "net_profit":              305343,
+    "_formula": "netProfit = 554_795 − 399_452 + 150_000 = 305_343",
+    "state_machine": [
+      { "at": "2026-05-30T14:25:00Z", "status": "pending" },
+      { "at": "2026-05-30T14:27:00Z", "status": "facility_repaid" },
+      { "at": "2026-05-30T14:28:00Z", "status": "profit_booked", "immutable": true },
+      { "at": "2026-05-30T14:30:00Z", "status": "closed" }
+    ]
+  },
+
+  "stage_14_audit_trail_summary": [
+    "ELIGIBILITY_CHECK_PASSED",
+    "SUPPLIER_REGISTERED",
+    "SUPPLIER_KYC_APPROVED",
+    "INVOICE_SUBMITTED",
+    "VALIDATION_STEP_1..5_PASS",
+    "BUYER_CONFIRMED",
+    "INVOICE_SCORED  (score 75, MANUAL_REVIEW)",
+    "INVOICE_PRICED  (advance 27M, discount 0.55M, net 26.4M, capped 15%)",
+    "APPROVAL_RECORDED  (TIER_1 by usr_co_kato)",
+    "PAYMENT_CREATED",
+    "PAYMENT_FIRST_AUTH  (lillian)",
+    "PAYMENT_SECOND_AUTH (brian)",
+    "PAYMENT_FUNDED",
+    "REMINDER_T-7_SENT",
+    "REMINDER_T-1_SENT",
+    "REMINDER_T+1_OVERDUE_SENT",
+    "ESCALATION_LEVEL_1_TRIGGERED",
+    "COLLECTION_RECEIVED  (with 150K penalty)",
+    "SETTLEMENT_INITIATED",
+    "SETTLEMENT_FACILITY_REPAID",
+    "SETTLEMENT_PROFIT_BOOKED",
+    "SETTLEMENT_CLOSED"
+  ]
+}
