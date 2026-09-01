@@ -97,15 +97,16 @@ export function SidebarNav(): React.ReactElement {
               tooltip={item.label}
               onClick={() => handleNavigate(item)}
               aria-current={isActive ? 'page' : undefined}
+              className={isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs transition-all" : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"}
             >
-              <item.icon className="size-4" />
-              <span>{item.label}</span>
+              <item.icon className={isActive ? "size-4 text-emerald-400" : "size-4 text-muted-foreground"} />
+              <span className="font-medium tracking-tight">{item.label}</span>
             </SidebarMenuButton>
             {badgeCount > 0 && (
               <SidebarMenuBadge>
                 <Badge
-                  variant="destructive"
-                  className="ml-auto size-5 flex items-center justify-center rounded-full p-0 text-[10px]"
+                  variant="gold"
+                  className="ml-auto size-5 flex items-center justify-center rounded-full p-0 text-[10px] font-bold shadow-xs"
                   aria-label={`${badgeCount} pending ${item.label.toLowerCase()}`}
                 >
                   {badgeCount > 99 ? '99+' : badgeCount}
